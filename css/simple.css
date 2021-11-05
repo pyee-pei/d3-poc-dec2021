@@ -1,0 +1,17 @@
+body{
+  font-family: Arial;
+  font-weight: 500;
+  font-size: 14px;
+  margin:0;
+  padding: 0;
+}
+
+
+#chart_div {
+  width: 100vw;
+  height:100vh;
+}
+
+.axis line {
+  display: none;
+}
