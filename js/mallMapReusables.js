@@ -97,24 +97,14 @@ function mallMapChart() {
                     d3.select(this).interrupt().transition().duration(100).attr("opacity",1);
                 })
                 .on("click",function(event,d){
-                    var currentDepth = d.depth;
-                    var breadcrumbData = [], currentParent = d;
-                    while (currentDepth > 0){
-                        breadcrumbData.push({
-                            "depth":currentParent.depth,
-                            "label":currentParent.data.name,
-                            "fill":currentParent.depth === 0 ? "white" : getPathFill(currentParent)
-                        })
-                        currentDepth = currentParent.depth;
-                        currentParent = currentParent.parent;
-                    }
+                    const breadcrumbData = getBreadcrumbs(d);
                     drawBreadcrumbs(breadcrumbData);
                     drawSunburst(d);
                     zoomToBounds();
                 });
 
             pathGroup.select(".pathLabel")
-                .text(d => (d.y0 + d.y1) / 2 * (d.x1 - d.x0) > mallMap.fontSize ? d.data.name : "")
+                .text(d => (d.y0 + d.y1) / 2 * (d.x1 - d.x0) > mallMap.fontSize ? (d.depth > 0 ? d.data.name : "") : "")
                 .attr("pointer-events", "none")
                 .attr("text-anchor", "middle")
                 .style("font-size", mallMap.fontSize)
@@ -162,7 +152,14 @@ function mallMapChart() {
                 .attr("stroke","#A0A0A0")
                 .attr("fill",d => d.fill)
                 .on("click",function(event,d){
-                    drawSunburst(root.descendants().find(f => f.depth === d.depth && f.data.name === d.label));
+                    var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
+                    if(d.depth > 0) {
+                        var breadcrumbData = getBreadcrumbs(myRoot);
+                        drawBreadcrumbs(breadcrumbData);
+                    } else {
+                        drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
+                    }
+                    drawSunburst(myRoot);
                     zoomToBounds();
                 })
 
@@ -189,6 +186,21 @@ function mallMapChart() {
 
             })
 
+        }
+
+        function getBreadcrumbs(d){
+            var currentDepth = d.depth;
+            var breadcrumbData = [], currentParent = d;
+            while (currentDepth > 0){
+                breadcrumbData.push({
+                    "depth":currentParent.depth,
+                    "label":currentParent.data.name,
+                    "fill":currentParent.depth === 0 ? "white" : getPathFill(currentParent)
+                })
+                currentDepth = currentParent.depth;
+                currentParent = currentParent.parent;
+            }
+            return breadcrumbData;
         }
 
     }
