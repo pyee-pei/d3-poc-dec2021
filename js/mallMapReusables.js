@@ -125,7 +125,6 @@ function mallMapChart() {
         function getPathFill(d){
             while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
             return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.fillColor);
-
         }
 
         function drawBreadcrumbs(breadcrumbData){
