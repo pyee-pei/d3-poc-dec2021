@@ -6,6 +6,11 @@ body{
   padding: 0;
 }
 
+#header_div {
+  width: 100vw;
+  height:20px;
+}
+
 #breadcrumb_div {
   width: 100vw;
   height:30px;
@@ -13,7 +18,7 @@ body{
 
 #chart_div {
   width: 100vw;
-  height:calc(100vh - 30px);
+  height:calc(100vh - 50px);
 }
 
 .axis line {
