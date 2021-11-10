@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Line Example</title>
-    <link rel="stylesheet" href="css/simple.css"/>
+    <title>Mall Map Prototype</title>
+    <link rel="stylesheet" href="css/mallMap.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="https://d3js.org/d3.v6.min.js" type="text/javascript"></script>
 </head>
 <body>
+<div id="breadcrumb_div"></div>
 <div id="chart_div"></div>
 
 
-<script type="text/javascript" src="js/simple.js"></script>
-<script type="text/javascript" src="js/simple_reusables.js"></script>
+<script type="text/javascript" src="js/mallMap.js"></script>
+<script type="text/javascript" src="js/mallMapReusables.js"></script>
+<script type="text/javascript" src="js/mallMapProperties.js"></script>
 <script>
 
     var promises = [
-        d3.csv("data/simple_data.csv"),
+        d3.json("data/stripped_data.json"),
 
     ]
 
@@ -23,13 +25,43 @@
 
     function ready(all_datasets) {
 
-        all_datasets[0].map(m => m.fullDate = new Date(m.date.split("-")[0],+m.date.split("-")[1]-1,m.date.split("-")[2]));
-
-        initialiseDashboard(all_datasets[0],"chart_div");
+        initialiseDashboard(all_datasets[0],"chart_div","breadcrumb_div");
 
     };
 
 
+    function stripData (myDataset){
+        var newData = {};
+        var fieldNames = ["name","value"];
+
+        addDetails(myDataset, newData);
+
+        function addDetails(myDescendant, currentData) {
+            fieldNames.forEach(function (f) {
+                currentData[f] = myDescendant[f];
+            });
+            currentData["colors"] = {
+                "functional":myDescendant["functional_color"],
+                "dev":myDescendant["dev_color"],
+                "default":myDescendant["color"]
+            }
+            if (myDescendant.children !== undefined) {
+                currentData.children = [];
+            }
+            var children = myDescendant.children;
+            if (myDescendant.children === null) {
+                children = myDescendant._children;
+            }
+            if (children !== undefined) {
+                children.forEach(function (c, i) {
+                    currentData.children.push({});
+                    addDetails(c, currentData.children[i]);
+                });
+            }
+        }
+
+        return newData;
+    }
 </script>
 </body>
 </html>
