@@ -69,6 +69,7 @@ function mallMapChart() {
 
         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}])
         drawSunburst(root.descendants());
+        zoomToBounds();
 
         function drawSunburst(sunburstData){
 
