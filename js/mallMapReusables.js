@@ -76,7 +76,7 @@ function mallMapChart() {
             d3.selectAll(".miniMapPath").attr("fill","#707070");
 
             if(allData === false){
-                sunburstData.descendants().forEach(d => d3.select("#miniMap" + d.depth + removeCharacters(d.data.name)).attr("fill",getPathFill));
+                sunburstData.descendants().forEach(d => d3.selectAll("#miniMap" + d.depth + removeCharacters(d.data.name)).attr("fill",getPathFill));
             }
             const pathGroup = svg.selectAll('.pathGroup' + myClass)
                 .data(sunburstData)
