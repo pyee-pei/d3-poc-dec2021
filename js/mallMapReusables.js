@@ -68,11 +68,16 @@ function mallMapChart() {
 
 
         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}])
-        drawSunburst(root.descendants());
+        drawSunburst(root.descendants(),true);
         zoomToBounds();
 
-        function drawSunburst(sunburstData){
+        function drawSunburst(sunburstData,allData){
 
+            d3.selectAll(".miniMapPath").attr("fill","#707070");
+
+            if(allData === false){
+                sunburstData.descendants().forEach(d => d3.select("#miniMap" + d.depth + removeCharacters(d.data.name)).attr("fill",getPathFill));
+            }
             const pathGroup = svg.selectAll('.pathGroup' + myClass)
                 .data(sunburstData)
                 .join(function(group){
@@ -98,10 +103,12 @@ function mallMapChart() {
                     d3.select(this).interrupt().transition().duration(100).attr("opacity",1);
                 })
                 .on("click",function(event,d){
-                    const breadcrumbData = getBreadcrumbs(d);
-                    drawBreadcrumbs(breadcrumbData);
-                    drawSunburst(d);
-                    zoomToBounds();
+                    if(d.depth > 0){
+                        const breadcrumbData = getBreadcrumbs(d);
+                        drawBreadcrumbs(breadcrumbData);
+                        drawSunburst(d,false);
+                        zoomToBounds();
+                    }
                 });
 
             pathGroup.select(".pathLabel")
@@ -153,13 +160,15 @@ function mallMapChart() {
                 .attr("fill",d => d.fill)
                 .on("click",function(event,d){
                     var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
+                    var allData = false;
                     if(d.depth > 0) {
                         var breadcrumbData = getBreadcrumbs(myRoot);
                         drawBreadcrumbs(breadcrumbData);
                     } else {
+                        allData = true;
                         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
                     }
-                    drawSunburst(myRoot);
+                    drawSunburst(myRoot,allData);
                     zoomToBounds();
                 })
 
@@ -239,6 +248,89 @@ function mallMapChart() {
     my.breadcrumbSvg = function(value) {
         if (!arguments.length) return breadcrumbSvg;
         breadcrumbSvg = value;
+        return my;
+    };
+
+    return my;
+}
+
+
+function removeCharacters(myText){
+    myText = myText.replace(/ /g,'');
+    myText = myText.replace(/-/g,'');
+    myText = myText.replace(/=/g,'');
+    myText = myText.replace(/%/g,'');
+    myText = myText.replace(/>/g,'');
+    myText = myText.replace(/</g,'');
+    myText = myText.replace(/[()]/g,'');
+    myText = myText.replace(/[/]/g,'');
+    return myText;
+}
+function miniMallMapChart() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="";
+
+    function my(svg) {
+
+        const chartWidth = Math.min(width, height);
+        const radius = chartWidth/2;
+        const translateStr = "translate(" + ((width/2) + (radius * 0.2)) + "," + (height/2) + ")";
+
+        const myHierarchy = d3.hierarchy(myData);
+        myHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
+        const root = d3.partition().size([2 * Math.PI, radius*1.4])(myHierarchy);
+
+        const arc = d3.arc()
+            .startAngle(d => d.x0)
+            .endAngle(d => d.x1)
+            .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+            .padRadius(radius / 2)
+            .innerRadius(d => d.y0)
+            .outerRadius(d => d.y1 - 1);
+
+        const pathGroup = svg.selectAll('.pathGroup' + myClass)
+            .data(root.descendants())
+            .join(function(group){
+                var enter = group.append("g").attr("class","pathGroup" + myClass);
+                enter.append("path").attr("class","miniMapPath");
+                return enter;
+            });
+
+        pathGroup
+            .attr("transform",translateStr);
+
+        pathGroup.select(".miniMapPath")
+            .attr("id",d => "miniMap" + d.depth + removeCharacters(d.data.name))
+            .attr("fill", "#707070")
+            .attr("d", arc);
+
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
         return my;
     };
 

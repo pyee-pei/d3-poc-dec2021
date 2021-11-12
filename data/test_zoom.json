@@ -1,0 +1,373 @@
+                    {
+                      "name": "▲ 3 Day",
+                      "colors": {},
+                      "children": [
+                        {
+                          "name": "Top 25",
+                          "colors": {},
+                          "children": [
+                            {
+                              "name": "Well 1",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 2",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 3",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 4",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 5",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 6",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 7",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 8",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 9",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 10",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 11",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 12",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 13",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 14",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 15",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 16",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 17",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 18",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 19",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 20",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 21",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 22",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 23",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 24",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            },
+                            {
+                              "name": "Well 25",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Green"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Middle",
+                          "value": 462.962963,
+                          "colors": {}
+                        },
+                        {
+                          "name": "Bottom 25",
+                          "colors": {},
+                          "children": [
+                            {
+                              "name": "Well 1",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 2",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 3",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 4",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 5",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 6",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 7",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 8",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 9",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 10",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 11",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 12",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 13",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 14",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 15",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 16",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 17",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 18",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 19",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 20",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 21",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 22",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 23",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 24",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            },
+                            {
+                              "name": "Well 25",
+                              "value": 18.5185185,
+                              "colors": {
+                                "default": "Red"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }

@@ -1,12 +1,12 @@
 
 
-function initialiseDashboard(myData,divId,breadcrumbDivId){
+function initialiseDashboard(myData,divId,breadcrumbDivId,footerDivId){
 
     drawSvg(divId,true);
     drawSvg(breadcrumbDivId,false);
+    drawSvg(footerDivId,false);
     drawMallMap(myData,divId,breadcrumbDivId);
-
-
+    drawMiniMallMap(myData,footerDivId);
 }
 
 function drawMallMap(myData,divId,breadcrumbDivId){
@@ -22,6 +22,21 @@ function drawMallMap(myData,divId,breadcrumbDivId){
         .myClass(divId)
         .selectedColor("default")
         .breadcrumbSvg(breadcrumbDivId + "Svg");
+
+    my_chart(svg);
+}
+
+function drawMiniMallMap(myData,divId){
+
+    var svg = d3.select("." + divId + "Svg");
+    var height = +svg.attr("height");
+    var width = height;
+
+    var my_chart = miniMallMapChart()
+        .width(width)
+        .height(height)
+        .myData(myData)
+        .myClass(divId);
 
     my_chart(svg);
 }

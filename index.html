@@ -13,6 +13,7 @@
 </div>
 <div id="breadcrumb_div"></div>
 <div id="chart_div"></div>
+<div id="footer_div"></div>
 
 
 <script type="text/javascript" src="js/mallMap.js"></script>
@@ -32,12 +33,12 @@
 
         var datasetChoice = "0";
 
-        initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div");
+        initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div","footer_div");
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
                 datasetChoice = this.value;
-                initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div");
+                initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div","footer_div");
             });
     };
 
