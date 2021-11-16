@@ -1,5 +1,5 @@
 body{
-  font-family: Arial;
+  font-family: Roboto;
   font-weight: 500;
   font-size: 14px;
   margin:0;
@@ -30,4 +30,23 @@ body{
 }
 .axis line {
   display: none;
+}
+
+.buttonRect{
+  fill: white;
+  stroke: #A0A0A0;
+}
+.d3_tooltip{
+  visibility: hidden;
+  border: 1px solid grey;
+  border-radius: 4px;
+  position: absolute;
+  text-align: left;
+  padding: 3px;
+  background: white;
+  pointer-events: none;
+  font-size: 0.8em;
+  width: auto;
+  height: auto;
+  margin-right: 80px;
 }

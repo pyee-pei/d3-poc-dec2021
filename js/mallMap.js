@@ -57,6 +57,8 @@ function drawSvg(divId,zoomSvg){
 
         if(zoomSvg === true){
             svg.append("g").attr("class","zoomSvg" + divId);
+            mallMap.texture = textures.lines().size(4).strokeWidth(0.5).stroke("white");
+            svg.call(mallMap.texture);
         }
 
     } else {
