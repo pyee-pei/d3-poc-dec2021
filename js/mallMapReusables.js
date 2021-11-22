@@ -332,7 +332,14 @@ function mallMapChart() {
                         d3.selectAll(".sunburstTexturePath")
                             .transition()
                             .duration(500)
-                            .attr("opacity",0);
+                            .attr("opacity",0)
+                            .transition()
+                            .duration(0) //add new foldoutpath
+                            .attr("d", d =>  d.foldoutPath)
+                            .transition()
+                            .delay(500)
+                            .duration(500)
+                            .attr("opacity",1);
 
                         d3.selectAll(".sunburstPath")
                             .attr("opacity",1)
