@@ -37,6 +37,7 @@
 
         var datasetChoice = "0";
 
+        //add an id to each node (temp hopefully)
         all_datasets.forEach(function(d,i){
             var myID = 0;
             d.id = "dataset_" + i + "_" + myID;
@@ -56,10 +57,7 @@
 
         })
 
-
         initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div","footer_div");
-
-
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
@@ -68,6 +66,9 @@
             });
     };
 
+
+    //functions used to stripData from Observable demos down to only what's needed and same format
+    //chart now loads with this stripped data.
 
     function stripData1 (myDataset){
         var newData = {};

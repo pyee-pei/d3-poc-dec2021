@@ -8,20 +8,14 @@ function mallMapChart() {
 
     function my(svg) {
 
+        //svg = zoomSvg
         svg = d3.select(".zoomSvg" + myClass);
-
+        //calc chartWidth + radius
         const chartWidth = Math.min(width, height);
         const radius = chartWidth/2;
+        //define depthWidth and translateStr and arc
+        let depthWidth = 0;
         const translateStr = "translate(" + (width/2) + "," + (height/2) + ")";
-
-        const myHierarchy = getHierarchy(myData);
-
-        function getHierarchy(myDataset){
-            var currentHierarchy = d3.hierarchy(myDataset);
-            return currentHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
-        }
-        const root = getPartition(myHierarchy,radius);
-
         const arc = d3.arc()
             .startAngle(d => d.x0)
             .endAngle(d => d.x1)
@@ -30,113 +24,23 @@ function mallMapChart() {
             .innerRadius(d => d.y0)
             .outerRadius(d => d.y1 - 1);
 
-        function getPartition(myDataset,myRadius){
-
-            return d3.partition().size([2 * Math.PI, myRadius])(myDataset);
-
-        }
-        function zoomToBounds(expandable,transitionTime){
-
-
-            var [scale,newX,newY] = getValues();
-
-            function getValues(){
-                const chartGroup = d3.select(".zoomSvg" + myClass).node().getBBox();
-                //calculate outer limits of data
-
-                const scale = (chartWidth-20)/Math.max(chartGroup.width,chartGroup.height);
-
-                const newX = ((width - (chartGroup.width*scale))/2) - (chartGroup.x*scale);
-                const newY = ((height - (chartGroup.height*scale))/2) - (chartGroup.y*scale);
-
-                return [scale,newX,newY]
-
-            }
-            //flickering problem is when zoom object (click rect) is not the same size as the svg.
-            //now the zoom object is a direct descendant of the svg
-            //the variable svg is in fact a group (see draw_svg in cgraphs.js).
-
-            //for the initial zoom to bounds.  Define the transform string.
-
-            const transform_str = d3.zoomIdentity
-                .translate(newX, newY)
-                .scale(scale);
-
-            mallMap.currentScale = scale;
-
-            //transform the svg
-            svg
-                .interrupt()
-                .transition()
-                .duration(transitionTime)
-                .attr("transform",transform_str)
-                .on("end",function(){
-                    if(expandable === true){
-                        midTransition = true;
-                        d3.selectAll(".pathLabel")
-                            .attr("opacity",1)
-                            .interrupt()
-                            .transition()
-                            .duration(500)
-                            .attr("opacity",0)
-                            .transition()
-                            .duration(0)
-                            .attr("transform", d =>  "rotate(" + (d.foldoutTransformX - 90) + ") translate("
-                                + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
-                            .transition()
-                            .delay(500)
-                            .duration(300)
-                            .style("font-size",(mallMap.fontSize*2) + "px")
-                            .attr("opacity",1);
-
-                        d3.selectAll(".sunburstTexturePath")
-                            .transition()
-                            .duration(500)
-                            .attr("opacity",0);
-
-                        d3.selectAll(".sunburstPath")
-                            .attr("opacity",1)
-                            .interrupt()
-                            .transition()
-                            .duration(500)
-                            .attr("opacity",0)
-                            .transition()
-                            .duration(0)
-                            .attr("d", d =>  d.foldoutPath)
-                            .on("end",function(){
-                                var [zoomedScale,zoomedX,zoomedY] = getValues();
-                                svg.transition()
-                                    .duration(0)
-                                    .attr("transform",d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
-                            })
-                            .transition()
-                            .delay(500)
-                            .duration(500)
-                           .attr("opacity",1)
-                            .on("end",function(){
-                                midTransition = false;
-                            });
-
-
-                    }
-                })
-
-        }
-
-
-
+        //format base data
+        const myHierarchy = getHierarchy(myData);
+        const root = getPartition(myHierarchy);
+        //draw breadcrumbs,chart and then zoomtobounds
         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}])
         drawSunburst(root.descendants(),true);
         zoomToBounds(false,1000);
 
         function drawSunburst(sunburstData,allData){
 
+            //calculate depthWidth (used for label visibility)
             var minDepth = d3.min(sunburstData, d => d.depth);
             var maxDepth = d3.max(sunburstData, d => d.depth);
-            var depthWidth = radius/(maxDepth-minDepth);
+            depthWidth = radius/(maxDepth-minDepth);
             midTransition = false;
 
-
+            //disable/enable buttons as needed
             if(allData === true || sunburstData.data === undefined || sunburstData.data.expandable === undefined){
                 d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
                 d3.selectAll("#map").attr("cursor","disabled").attr("opacity",0.2);
@@ -144,11 +48,16 @@ function mallMapChart() {
                 d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
                 d3.selectAll("#map").attr("cursor","pointer").attr("opacity",1);
             }
+
+            //reset mini mall map
             d3.selectAll(".miniMapPath").attr("fill","#707070");
 
             if(allData === false){
+                //if not all data, select relevant paths on mini mall map
                 sunburstData.descendants().forEach(d => d3.selectAll("#miniMap" + d.data.id).attr("fill",getPathFill));
             }
+
+            //path group
             const pathGroup = svg.selectAll('.pathGroup' + myClass)
                 .data(sunburstData, d => allData + "_" + minDepth + "_" + maxDepth)
                 .join(function(group){
@@ -171,8 +80,8 @@ function mallMapChart() {
                 .attr("opacity",1)
                 .attr("fill", getPathFill)
                 .attr("d", arc)
-                .on("mousemove",function(event,d){
-                    if(midTransition === true){
+                .on("mouseover",function(event,d){
+                    if(midTransition === false){
                         d3.selectAll(".sunburstPath").attr("opacity",1);
                         d3.select(this).interrupt().transition().duration(100).attr("opacity",0.5);
                         var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
@@ -191,11 +100,14 @@ function mallMapChart() {
                 })
                 .on("click",function(event,d){
                     if(d.depth > 0 && midTransition === false){
+                        //get breadcrumb data and redraw breadcrumb
                         const breadcrumbData = getBreadcrumbs(d);
                         drawBreadcrumbs(breadcrumbData);
+                        //if expandable, add foldoutdata
                         if(d.data.expandable !== undefined){
                             addFoldoutData(d);
                         }
+                        //redraw sunburst and zoom.
                         drawSunburst(d,false);
                         zoomToBounds(d.data.expandable === undefined ? false : true,1000);
                     }
@@ -203,49 +115,59 @@ function mallMapChart() {
 
             pathGroup.select(".pathLabel")
                 .attr("opacity",1)
-                .text(d => pathText(d,depthWidth))
                 .attr("pointer-events", "none")
                 .attr("text-anchor", "middle")
-                .style("font-size", mallMap.fontSize)
+                .text(pathText)
                 .attr("transform", function(d) {
                     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
                     const y = (d.y0 + d.y1) / 2;
                     return "rotate(" + (x - 90) + ") translate(" + y + ",0) rotate(" + (x < 180 ? 0 : 180) + ")";
                 })
-                .attr("y", mallMap.fontSize*0.3)
                 .attr("fill", d => {
                     while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
                     return d3.lab(d.data.colors[selectedColor] || mallMap.colors.fillColor).l < 60 ? mallMap.colors.lightColor
                         : mallMap.colors.darkColor;
                 });
+        }
 
-            function pathText(d,currentDepthWidth){
+        function pathText(d,includeZero){
 
-                //first check arc height
-                if(((d.y0 + d.y1) / 2 * (d.x1 - d.x0) > mallMap.fontSize)  && d.depth > 0){
-                    //all good, now check width
-                    console.log(d.data.name, measureWidth(d.data.name),currentDepthWidth);
-                    if(measureWidth(d.data.name) < currentDepthWidth/mallMap.currentScale){
-                        return d.data.name;
-                    } else {
-                        return "";
-                    }
-
+            var heightCheck = (d.y0 + d.y1) / 2 * (d.x1 - d.x0);
+            heightCheck = includeZero === true ? heightCheck * mallMap.currentScale : heightCheck;
+            //first check arc height
+            if((heightCheck > (mallMap.fontSize/mallMap.currentScale))  && d.depth > 0){
+                //all good, now check width
+                if(measureWidth(d.data.name) < depthWidth){
+                    //only show name if there is space.
+                    return d.data.name;
                 } else {
                     return "";
                 }
+
+            } else {
+                return "";
             }
         }
 
-
         function addFoldoutData(d){
 
-            //I've got my current path.
-            //Which is drawn using my current dimensions and depth.
 
-            //I need to copy the hierarchy.
+            //copy the hierarchy
             var myCopy = {"value":d.value,"name":d.data.name,"id":d.data.id,"colors":d.data.colors,"children":[]};
             addChildren(d.children,myCopy);
+            //flatten it and add partition/hierarchy
+            var flattenCopy = getPartition(getHierarchy(myCopy));
+            flattenCopy = flattenCopy.descendants();
+            //map foldoutPath for copied data.
+            flattenCopy.map(m => m.foldoutPath = arc(m));
+            d.descendants().map(function(m){
+                //add foldoutPath,dimensions + transform to current data
+                var myFoldout = flattenCopy.find(f => f.data.id === m.data.id);
+                m.foldoutPath = myFoldout.foldoutPath;
+                m.foldoutWidth = myFoldout.x1 - myFoldout.x0;
+                m.foldoutHeight = myFoldout.depth === 0 ? 0 : (myFoldout.y0 + myFoldout.y1)/2;
+                m.foldoutTransformX = myFoldout.depth === 0 ? 90 : (myFoldout.x0 + myFoldout.x1) / 2 * 180 / Math.PI;
+            });
 
             function addChildren(myDataset,currentCopy){
                 myDataset.forEach(function(c){
@@ -262,42 +184,25 @@ function mallMapChart() {
                     }
                 })
             }
-            //flatten it and add hierarchy
-            var currentRadius = (d.x1 - d.x0)/2;
-            var flattenCopy = getPartition(getHierarchy(myCopy),radius);
-            flattenCopy = flattenCopy.descendants();
-            flattenCopy.map(m => m.foldoutPath = arc(m));
-            d.descendants().map(function(m){
-                var myFoldout = flattenCopy.find(f => f.data.id === m.data.id);
-                m.foldoutPath = myFoldout.foldoutPath;
-                //.replace(/-/g,' -');
-                //m.foldoutPath =  m.foldoutPath.replace(/e /g,'e');
-                //m.foldoutPath =  m.foldoutPath.replace(/A/g,' A ');
-                 //m.foldoutPath =  m.foldoutPath.replace(/L/g,' L ');
-                //console.log(m.foldoutPath);
-                m.foldoutWidth = myFoldout.x1 - myFoldout.x0;
-                m.foldoutHeight = (myFoldout.y0 + myFoldout.y1)/2;
-                m.foldoutTransformX = (myFoldout.x0 + myFoldout.x1) / 2 * 180 / Math.PI;
-            });
-
-
         }
+
         function getPathFill(d){
             while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
             return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.fillColor);
         }
 
         function measureWidth(my_text){
+            //from https://observablehq.com/@mbostock/fit-text-to-circle
             const context = document.createElement("canvas").getContext("2d");
             return context.measureText(my_text).width;
         }
 
         function drawBreadcrumbs(breadcrumbData){
 
+            //sort data and select svg
             breadcrumbData = breadcrumbData.sort((a,b) => d3.ascending(a.depth,b.depth));
-
             var mySvg = d3.select("." + breadcrumbSvg);
-
+            //join data
             const breadcrumbGroup = mySvg.selectAll('.breadcrumbGroup' + myClass)
                 .data(breadcrumbData)
                 .join(function(group){
@@ -320,12 +225,15 @@ function mallMapChart() {
                         var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
                         var allData = false;
                         if(d.depth > 0) {
+                            //reset breadcrumbs if > 0
                             var breadcrumbData = getBreadcrumbs(myRoot);
                             drawBreadcrumbs(breadcrumbData);
                         } else {
+                            //or reset to default breadcrumb
                             allData = true;
                             drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
                         }
+                        //draw chart and zoom.
                         drawSunburst(myRoot,allData);
                         zoomToBounds(myRoot.data.expandable === undefined ? false : true,1000);
                     }
@@ -341,6 +249,7 @@ function mallMapChart() {
 
             var breadcrumbX = 10;
 
+            //loop through and position breadcrumb rects dependent on label position
             d3.selectAll(".breadcrumbLabel").each(function(d,i){
                 var myWidth = document.getElementById("breadcrumbLabel" + i).getBoundingClientRect().width;
                 d3.select("#breadcrumbRect" + i)
@@ -357,6 +266,7 @@ function mallMapChart() {
         }
 
         function getBreadcrumbs(d){
+            //loop through and add breadcrumb for each depth;
             var currentDepth = d.depth;
             var breadcrumbData = [], currentParent = d;
             while (currentDepth > 0){
@@ -369,6 +279,113 @@ function mallMapChart() {
                 currentParent = currentParent.parent;
             }
             return breadcrumbData;
+        }
+
+        function getHierarchy(myDataset){
+            var currentHierarchy = d3.hierarchy(myDataset);
+            return currentHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
+        }
+
+        function getPartition(myDataset){
+            return d3.partition().size([2 * Math.PI, radius])(myDataset);
+        }
+
+        function zoomToBounds(expandable,transitionTime){
+            //get values
+            var [scale,newX,newY] = getValues();
+
+            //define transform string
+            const transform_str = d3.zoomIdentity
+                .translate(newX, newY)
+                .scale(scale);
+
+            //store current scale and alter fontSize accordingly
+            mallMap.currentScale = scale;
+            updateFonts(false);
+
+            //transform the svg
+            svg
+                .interrupt()
+                .transition()
+                .duration(transitionTime)
+                .attr("transform",transform_str)
+                .on("end",function(){
+                    //if expandable carry on
+                    if(expandable === true  && midTransition === false){
+                        midTransition = true; //so any other clicks are disabled while this is going on
+                        d3.selectAll(".pathLabel")
+                            .attr("opacity",1)
+                            .interrupt()
+                            .transition()
+                            .duration(500)
+                            .attr("opacity",0) //hide label
+                            .transition()
+                            .duration(0) //then change position
+                            .attr("transform", d =>  "rotate(" + (d.foldoutTransformX - 90) + ") translate("
+                                + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
+                            .transition()
+                            .delay(500)
+                            .duration(300) //and show label
+                            .attr("opacity",1);
+
+                        //remove all texture paths
+                        d3.selectAll(".sunburstTexturePath")
+                            .transition()
+                            .duration(500)
+                            .attr("opacity",0);
+
+                        d3.selectAll(".sunburstPath")
+                            .attr("opacity",1)
+                            .interrupt()
+                            .transition()
+                            .duration(500) //hide paths
+                            .attr("opacity",0)
+                            .transition()
+                            .duration(0) //add new foldoutpath
+                            .attr("d", d =>  d.foldoutPath)
+                            .on("end",function(){
+                                //get new scale and rescale
+                                var [zoomedScale,zoomedX,zoomedY] = getValues();
+                                svg.transition()
+                                    .duration(0)
+                                    .attr("transform",d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
+                                //PROBLEM IS THAT THE zoomScale is for the foldoutPath - not for every
+                                //mallMap.currentScale = zoomedScale;
+                                updateFonts(true);
+                            })
+                            .transition()
+                            .delay(500)
+                            .duration(500)
+                            .attr("opacity",1)
+                            .on("end",function(){
+                                midTransition = false;
+                            });
+                    } else {
+                        updateFonts(false,);
+                    }
+                })
+
+            function updateFonts(includeZero){
+                var fontSize = mallMap.fontSize/(includeZero === true ? 1 : mallMap.currentScale);
+                d3.selectAll(".pathLabel")
+                    .style("font-size",fontSize)
+                    .attr("y", fontSize*0.3)
+                    .text(l => includeZero === false && l.depth === 0 ? "" : pathText(l,includeZero));
+            }
+
+            function getValues(){
+
+                const chartGroup = d3.select(".zoomSvg" + myClass).node().getBBox();
+
+                const scale = (chartWidth-20)/Math.max(chartGroup.width,chartGroup.height);
+
+                const newX = ((width - (chartGroup.width*scale))/2) - (chartGroup.x*scale);
+                const newY = ((height - (chartGroup.height*scale))/2) - (chartGroup.y*scale);
+
+                return [scale,newX,newY]
+
+            }
+
         }
 
     }

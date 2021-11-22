@@ -2,9 +2,11 @@
 
 function initialiseDashboard(myData,divId,breadcrumbDivId,footerDivId){
 
+    //draw svg for breadcrumb,chart and footer
     drawSvg(divId,true);
     drawSvg(breadcrumbDivId,false);
     drawSvg(footerDivId,false);
+    //draw map + minimap in footer
     drawMallMap(myData,divId,breadcrumbDivId);
     drawMiniMallMap(myData,footerDivId);
 }
@@ -56,6 +58,7 @@ function drawSvg(divId,zoomSvg){
             .attr("height",height);
 
         if(zoomSvg === true){
+            //zoomSvg and texture added for main chart svg
             svg.append("g").attr("class","zoomSvg" + divId);
             mallMap.texture = textures.lines().size(4).strokeWidth(0.5).stroke("white");
             svg.call(mallMap.texture);
