@@ -312,6 +312,7 @@ function mallMapChart() {
                 .on("end",function(){
                     //if expandable carry on
                     if(expandable === true  && midTransition === false){
+                        d3.select(".d3_tooltip").style("visibility","hidden");
                         midTransition = true; //so any other clicks are disabled while this is going on
                         d3.selectAll(".pathLabel")
                             .attr("opacity",1)
