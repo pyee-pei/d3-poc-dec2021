@@ -502,20 +502,32 @@ function miniMallMapChart() {
                 return enter;
             });
 
-        buttonGroup.select(".buttonRect")
-            .attr("cursor",d => d === "fan" || d === "map" ? "disabled" : "pointer")
-            .attr("opacity",d => d === "fan" || d === "map" ? 0.2 : 1)
+        buttonGroup
             .attr("id",d => d)
+            .attr("opacity",d => d === "fan" || d === "map" ||  d === "table"? 0.2 : (d === "bar" ? 1 : 0.4))
+            .attr("cursor",d => d === "fan" || d === "map" || d === "table"? "disabled" : "pointer")
+
+        buttonGroup.select(".buttonRect")
             .attr("width",buttonWidth)
             .attr("x",(d,i) => i * (buttonWidth + 7))
             .attr("rx",4)
             .attr("ry",4)
             .attr("height",30)
-            .attr("transform","translate(" + (10 + (chartWidth*1.4) + buttonTransformX) + ",5)");
+            .attr("transform","translate(" + (10 + (chartWidth*1.4) + buttonTransformX) + ",5)")
+            .on("click",function(event,d){
+                if(d === "bar"){
+                    d3.selectAll("#tile").attr("opacity",0.4);
+                    d3.selectAll("#bar").attr("opacity",1);
+                    drawStackedBar();
+                } else {
+                    d3.selectAll("#tile").attr("opacity",1);
+                    d3.selectAll("#bar").attr("opacity",0.4);
+                    drawLineMultiples();
+                }
+            });
 
         buttonGroup.select(".buttonIcon")
             .attr("pointer-events","none")
-            .attr("opacity",d => d === "fan" || d === "map" ? 0.2 : 1)
             .attr("id",d => d)
             .attr("font-size",20)
             .attr("x",(d,i) => i * (buttonWidth + 7))
@@ -525,7 +537,6 @@ function miniMallMapChart() {
             .attr("transform","translate(" + (15 + (chartWidth*1.4) + buttonTransformX) + ",5)");
 
         buttonGroup.select(".buttonLabel")
-            .attr("opacity",d => d === "fan" || d === "map" ? 0.2 : 1)
             .attr("pointer-events","none")
             .attr("id",d => d)
             .attr("font-size",14)
@@ -547,6 +558,427 @@ function miniMallMapChart() {
     my.height = function(value) {
         if (!arguments.length) return height;
         height = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
+        return my;
+    };
+
+    return my;
+}
+
+
+function stackedBarChart() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="",
+        stackType = "well_orientation",
+        barData = [],
+        barDataTop25 = [],
+        barDataBottom25 = [],
+        myKeys = [],
+        currentData = "0";
+
+    function my(svg) {
+
+        let dateGroup = d3.group(myData.data, d => d.date);
+
+        dateGroup = Array.from(dateGroup);
+
+        let [barData,barDataTop25,barDataBottom25,myKeys] = getDatabyStackOption();
+
+        function getDatabyStackOption(){
+            let myKeys = new Set();
+            myData.data.forEach(d => myKeys.add(d[stackType]));
+            myKeys = Array.from(myKeys);
+
+            const barData = [];
+            const barDataTop25 = [];
+            const barDataBottom25 = [];
+
+            dateGroup.forEach(function(d){
+                var myTotal = d3.sum(d[1], s => s.ipc_revenue);
+                var actualTotal = d3.sum(d[1], s => s.actual_revenue);
+                var stackData = Array.from(d3.rollup(d[1],v => d3.sum(v, s => s.actual_revenue)
+                    ,g => g[stackType]));
+                barData.push(getEntry(d[0],myTotal,actualTotal,stackData));
+                var filteredData = d[1].filter(f => f.position_flag === "topN")
+                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
+                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
+                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue),g => g[stackType]));
+                barDataTop25.push(getEntry(d[0],myTotal,actualTotal,stackData));
+                filteredData = d[1].filter(f => f.position_flag === "bottomN")
+                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
+                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
+                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue)
+                    ,g => g[stackType]));
+                barDataBottom25.push(getEntry(d[0],myTotal,actualTotal,stackData));
+            })
+
+            return [barData,barDataTop25,barDataBottom25,myKeys];
+
+            function getEntry(myDate,dataTotal,actualTotal,dataStack){
+
+                var currentEntry = {
+                    "date":myDate,
+                    "total": dataTotal,
+                    "actual_total":actualTotal
+                }
+                myKeys.forEach(function(k){
+                    var findValue = dataStack.find(f => f[0] === k);
+                    if(findValue === undefined){
+                        currentEntry[k] = 0;
+                    } else {
+                        currentEntry[k] = findValue[1] < 0 ? 0 : findValue[1];
+                    }
+                });
+                return currentEntry
+            }
+        }
+
+
+        let xDomain = new Set();
+        barData.forEach(d => xDomain.add(d.date));
+        xDomain = Array.from(xDomain).sort((a,b) => d3.ascending(a,b));
+
+        const xScale = d3.scaleBand().domain(xDomain).range([0,width]);
+        const xScaleTime = d3.scaleTime().domain(d3.extent(xDomain)).range([0,width]);
+
+        if(d3.select(".xAxis" + myClass)._groups[0][0] === null) {
+            svg.append("g").attr("class","axis xAxis" + myClass);
+            svg.append("g").attr("class","axis yAxis" + myClass);
+            svg.append("g").attr("class","zeroLine" + myClass);
+            svg.append("path").attr("class","ipcLine" + myClass);
+        }
+
+        d3.select(".xAxis" + myClass)
+            .call(d3.axisBottom(xScaleTime).tickValues(d3.extent(xDomain)).tickFormat(d => d3.timeFormat("%d %b %y")(d)).tickSizeOuter(0))
+            .attr("transform","translate(" + margins.left + "," + (height + margins.top) + ")");
+
+        d3.selectAll(".xAxis" + myClass + " .tick text")
+            .style("text-anchor",(d,i) => i === 0 ? "start" : "end")
+            .attr("y",4);
+
+        drawBar(barData);
+
+        function drawBar(myBarData){
+
+            const yMax = d3.max(myBarData, d => Math.max(d.total,d.actual_total));
+            const yScale = d3.scaleLinear().domain([0,yMax]).range([height,0]);
+            const scaleNumber = myKeys.length < 4 ? 4 : (myKeys.length > 9 ? 9 : myKeys.length);
+
+            const line = d3.line()
+                .x(d => xScale(d.date))
+                .y(d => yScale(d.total));
+
+            const stackedData = d3.stack()
+                .keys(myKeys)
+                (myBarData);
+
+            d3.select(".yAxis" + myClass)
+                .call(d3.axisLeft(yScale).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0))
+                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+            d3.selectAll(".yAxis" + myClass + " .tick text")
+                .attr("x",-4)
+
+            d3.select(".ipcLine" + myClass)
+                .attr("d",line(myBarData))
+                .attr("fill","none")
+                .attr("stroke","#31a354")
+                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+            const stackGroup = svg.selectAll('.stackGroup' + myClass)
+                .data(stackedData)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","stackGroup" + myClass);
+                    enter.append("g").attr("class","stackGroup");
+                    return enter;
+                });
+
+            stackGroup.select(".stackGroup")
+                .attr("fill",(d,i) => d3.schemeBlues[scaleNumber][scaleNumber-(i+1)])
+                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+            const barGroup = stackGroup.select(".stackGroup").selectAll('.barGroup' + myClass)
+                .data(d => d)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","barGroup" + myClass);
+                    enter.append("rect").attr("class","stackedRect");
+                    return enter;
+                });
+
+            barGroup.select(".stackedRect")
+                .attr("x",d => xScale(d.data.date))
+                .attr("y",d => yScale(d[1]))
+                .attr("height",d => yScale(d[0]) - yScale(d[1]))
+                .attr("width",xScale.bandwidth()-1)
+
+        }
+
+        const filterOptions = ["all","top 25","bottom 25"];
+
+        const filterGroup = svg.selectAll('.filterGroup' + myClass)
+            .data(filterOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","filterGroup" + myClass);
+                enter.append("text").attr("class","filterText");
+                return enter;
+            });
+
+        filterGroup.select(".filterText")
+            .attr("id",(d,i) => "filterText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",height + margins.top + (margins.bottom/2))
+            .attr("cursor","pointer")
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.toUpperCase())
+            .attr("transform","translate(" + margins.left + ",0)")
+            .on("click",function(event,d){
+                d3.selectAll(".filterText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                if(d === "all"){
+                    drawBar(barData);
+                    currentData = 0;
+                } else if (d === "top 25"){
+                    drawBar(barDataTop25);
+                    currentData = 1;
+                } else {
+                    drawBar(barDataBottom25);
+                    currentData = 2;
+                }
+            });
+
+        var filterX = 0;
+        d3.selectAll(".filterText").each(function(){
+            d3.select(this).attr("x",filterX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            filterX += (textWidth + 5);
+        })
+
+        filterGroup.attr("transform","translate(" + ((width - filterX)/2) + ",0)");
+
+        const stackOptions = ["well_orientation","op_code","route_name"];
+
+        const stackOptionsGroup = svg.selectAll('.stackOptionsGroup' + myClass)
+            .data(stackOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","stackOptionsGroup" + myClass);
+                enter.append("text").attr("class","stackOptionsText");
+                return enter;
+            });
+
+        stackOptionsGroup.select(".stackOptionsText")
+            .attr("id",(d,i) => "stackOptionsText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",margins.top - (margins.bottom/2))
+            .attr("cursor","pointer")
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' ').toUpperCase())
+            .attr("transform","translate(" + margins.left + ",0)")
+            .on("click",function(event,d){
+                d3.selectAll(".stackOptionsText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                stackType = d;
+                let newStackTypeData = getDatabyStackOption();
+                [barData,barDataTop25,barDataBottom25,myKeys] = newStackTypeData;
+                drawBar(newStackTypeData[currentData]);
+
+            });
+
+
+        var stackX = 0;
+        d3.selectAll(".stackOptionsText").each(function(){
+            d3.select(this).attr("x",stackX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            stackX += (textWidth + 5);
+        })
+
+        stackOptionsGroup.attr("transform","translate(" + ((width - stackX)/2) + ",0)");
+
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.margins = function(value) {
+        if (!arguments.length) return margins;
+        margins = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
+        return my;
+    };
+
+    return my;
+}
+
+
+function lineMultipleChart() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="",
+        filterType = "topN";
+
+    function my(svg) {
+
+
+
+        var chartWidth = (width - margins.left - margins.right)/5;
+        var chartHeight = (height - margins.top - margins.bottom)/5;
+        const xScale = d3.scaleTime().domain(d3.extent(myData.data, d => d.date)).range([0,chartWidth-10]);
+
+        drawMultiples();
+
+        function drawMultiples(){
+            var filteredData = myData.data.filter(f => f.position_flag === filterType);
+
+            var wellGroup = d3.group(filteredData, d => d.well_id);
+            wellGroup = Array.from(wellGroup);
+
+            const yScale = d3.scaleLinear().domain([0,d3.max(filteredData, d => Math.max(d.ipc_revenue,d.actual_revenue))])
+                .range([chartHeight-10,0])
+
+            const line = d3.line()
+                .x(d => xScale(d.date))
+                .y(d => yScale(d.ipc_revenue));
+
+            const area = d3.area()
+                .x(d => xScale(d.date))
+                .y0(d => yScale(d.actual_revenue))
+                .y1(yScale(0));
+
+            const chartGroup = svg.selectAll('.chartGroup' + myClass)
+                .data(wellGroup)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","chartGroup" + myClass);
+                    enter.append("rect").attr("class","wellRect");
+                    enter.append("text").attr("class","wellLabel")
+                    enter.append("path").attr("class","actualArea");
+                    enter.append("path").attr("class","ipcLine");
+                    return enter;
+                });
+
+            chartGroup
+                .attr("transform",(d,i) => "translate(" + ((i % 5) * chartWidth)
+                    + "," + (parseInt(i/5) * chartHeight) + ")")
+
+            chartGroup.select(".ipcLine")
+                .attr("d",d => line(d[1]))
+                .attr("fill","none")
+                .attr("stroke","#31a354")
+                .attr("transform","translate(" + (margins.left+5) + "," + (margins.top+5) + ")");
+
+            chartGroup.select(".actualArea")
+                .attr("d",d => area(d[1]))
+                .attr("fill",d3.schemeBlues[4][3])
+                .attr("fill-opacity",0.4)
+                .attr("stroke","none")
+                .attr("transform","translate(" + (margins.left+5) + "," + (margins.top+5) + ")");
+
+            chartGroup.select(".wellLabel")
+                .attr("font-size",8)
+                .attr("x",chartWidth/2)
+                .attr("y",15)
+                .attr("text-anchor","middle")
+                .text(d => myData.wellNames[d[0]].toUpperCase())
+                .attr("transform","translate(" + (2.5 + margins.left) + "," + (2.5 + margins.top) + ")")
+
+
+            chartGroup.select(".wellRect")
+                .attr("width",chartWidth - 5)
+                .attr("height",chartHeight - 5)
+                .attr("fill","#F0F0F0")
+                .attr("transform","translate(" + (2.5 + margins.left) + "," + (2.5 + margins.top) + ")")
+        }
+
+        const filterOptions = ["top 25","bottom 25"];
+
+        const filterGroup = svg.selectAll('.filterGroup' + myClass)
+            .data(filterOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","filterGroup" + myClass);
+                enter.append("text").attr("class","filterText");
+                return enter;
+            });
+
+        filterGroup.select(".filterText")
+            .attr("id",(d,i) => "filterText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",margins.top/2)
+            .attr("cursor","pointer")
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' ').toUpperCase())
+            .on("click",function(event,d){
+                d3.selectAll(".filterText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                if(d === "top 25"){
+                    filterType = "topN";
+                } else {
+                    filterType = "bottomN";
+                }
+                drawMultiples();
+            });
+
+
+        var filterX = 0;
+        d3.selectAll(".filterText").each(function(){
+            d3.select(this).attr("x",filterX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            filterX += (textWidth + 5);
+        })
+
+        filterGroup.attr("transform","translate(" + ((width - filterX)/2) + ",0)");
+
+
+
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.margins = function(value) {
+        if (!arguments.length) return margins;
+        margins = value;
         return my;
     };
 

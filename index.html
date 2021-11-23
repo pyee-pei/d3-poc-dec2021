@@ -16,6 +16,7 @@
 </div>
 <div id="breadcrumb_div"></div>
 <div id="chart_div"></div>
+<div id="extra_chart_div"></div>
 <div id="footer_div"></div>
 <div class="d3_tooltip"></div>
 
@@ -28,6 +29,7 @@
     var promises = [
         d3.json("data/dataset_1.json"),
         d3.json("data/dataset_2.json"),
+        d3.csv("data/dev_production_data.csv"),
 
     ]
 
@@ -35,35 +37,64 @@
 
     function ready(all_datasets) {
 
+        var extraChartData = [],
+        wellNames = {};
+
+
+        all_datasets[2].forEach(function(d){
+            if(d.current_status === "ACTIVE"){
+                wellNames[d.well_id] = d.well_name;
+                extraChartData.push({
+                    "date":convertDate(d.DATE),
+                    "well_id":d.well_id,
+                    "well_orientation":d.well_orientation,
+                    "actual_revenue":+d.actual_revenue_minus_royalty,
+                    "ipc_revenue":+d.ipc_revenue_minus_royalty,
+                    "op_code":d.op_code,
+                    "route_name":d.route_name,
+                    "position_flag":d["30_day_revenue_ipc_delta_flag"]
+
+                })
+            }
+        })
+        extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
+        extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
+
         var datasetChoice = "0";
 
         //add an id to each node (temp hopefully)
         all_datasets.forEach(function(d,i){
-            var myID = 0;
-            d.id = "dataset_" + i + "_" + myID;
-            myID += 1;
-            d.children = addId(d.children,i);
+            if(i < 2){
+                var myID = 0;
+                d.id = "dataset_" + i + "_" + myID;
+                myID += 1;
+                d.children = addId(d.children,i);
 
-            function addId(myChildren,myIndex){
-                myChildren.forEach(function(c){
-                    c.id = "dataset_" + myIndex + "_" + myID;
-                    myID += 1
-                    if(c.children !== undefined){
-                        addId(c.children,myIndex);
-                    }
-                })
-                return myChildren;
+                function addId(myChildren,myIndex){
+                    myChildren.forEach(function(c){
+                        c.id = "dataset_" + myIndex + "_" + myID;
+                        myID += 1
+                        if(c.children !== undefined){
+                            addId(c.children,myIndex);
+                        }
+                    })
+                    return myChildren;
+                }
             }
-
         })
 
-        initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div","footer_div");
+        initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
                 datasetChoice = this.value;
                 initialiseDashboard(all_datasets[datasetChoice],"chart_div","breadcrumb_div","footer_div");
             });
+
+        function convertDate(myDate){
+            myDate = myDate.split("/");
+            return new Date(myDate[2],+myDate[0]-1,myDate[1]);
+        }
     };
 
 

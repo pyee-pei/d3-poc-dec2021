@@ -1,14 +1,19 @@
 
 
-function initialiseDashboard(myData,divId,breadcrumbDivId,footerDivId){
+function initialiseDashboard(myData,extraChartData,divId,breadcrumbDivId,footerDivId,extraChartDivId){
 
     //draw svg for breadcrumb,chart and footer
     drawSvg(divId,true);
     drawSvg(breadcrumbDivId,false);
     drawSvg(footerDivId,false);
+    drawSvg(extraChartDivId,false);
     //draw map + minimap in footer
     drawMallMap(myData,divId,breadcrumbDivId);
     drawMiniMallMap(myData,footerDivId);
+    mallMap.extraChartData = extraChartData;
+    mallMap.extraChartDivId = extraChartDivId;
+    drawStackedBar();
+
 }
 
 function drawMallMap(myData,divId,breadcrumbDivId){
@@ -39,6 +44,47 @@ function drawMiniMallMap(myData,divId){
         .height(height)
         .myData(myData)
         .myClass(divId);
+
+    my_chart(svg);
+}
+
+
+
+function drawStackedBar(){
+    //quick win, will make this better
+    d3.select("." + mallMap.extraChartDivId  + "Svg").selectAll("*").remove();
+
+    var svg = d3.select("." + mallMap.extraChartDivId + "Svg");
+    var height = +svg.attr("height");
+    var width = +svg.attr("width");
+    var margins = {"left":width*0.2,"right":width*0.2,"top":height*0.2,"bottom":height*0.2};
+
+    var my_chart = stackedBarChart()
+        .width(width*0.6)
+        .height(height*0.6)
+        .margins(margins)
+        .myData(mallMap.extraChartData)
+        .myClass(mallMap.extraChartDivId );
+
+    my_chart(svg);
+}
+
+function drawLineMultiples(){
+
+    //quick win, will make this better
+    d3.select("." + mallMap.extraChartDivId  + "Svg").selectAll("*").remove();
+    var svg = d3.select("." + mallMap.extraChartDivId  + "Svg");
+
+    var height = +svg.attr("height");
+    var width = +svg.attr("width");
+    var margins = {"left":10,"right":10,"top":30,"bottom":10};
+
+    var my_chart = lineMultipleChart()
+        .width(width)
+        .height(height)
+        .margins(margins)
+        .myData(mallMap.extraChartData)
+        .myClass(mallMap.extraChartDivId );
 
     my_chart(svg);
 }
