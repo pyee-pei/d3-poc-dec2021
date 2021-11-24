@@ -89,7 +89,7 @@ function mallMapChart() {
                             .style("visibility","visible")
                             .style("top",(event.offsetY + svgBounds.y) + "px")
                             .style("left",(event.offsetX + svgBounds.x + 10) + "px")
-                            .html(d.data.name);
+                            .html(d.data.name + (d.data.revenue === undefined ? "" : "<br>Revenue: US$ " + d3.format(",.0f")(d.data.revenue)));
                     }
                 })
                 .on("mouseout",function(){
@@ -504,8 +504,8 @@ function miniMallMapChart() {
 
         buttonGroup
             .attr("id",d => d)
-            .attr("opacity",d => d === "fan" || d === "map" ||  d === "table"? 0.2 : (d === "bar" ? 1 : 0.4))
-            .attr("cursor",d => d === "fan" || d === "map" || d === "table"? "disabled" : "pointer")
+            .attr("opacity",d => d === "fan" || d === "map" ? 0.2 : (d === "bar" ? 1 : 0.4))
+            .attr("cursor",d => d === "fan" || d === "map" ? "disabled" : "pointer")
 
         buttonGroup.select(".buttonRect")
             .attr("width",buttonWidth)
@@ -519,10 +519,12 @@ function miniMallMapChart() {
                     d3.selectAll("#tile").attr("opacity",0.4);
                     d3.selectAll("#bar").attr("opacity",1);
                     drawStackedBar();
+                } else if(d === "table"){
+                    window.open("dataTable.html")
                 } else {
-                    d3.selectAll("#tile").attr("opacity",1);
-                    d3.selectAll("#bar").attr("opacity",0.4);
-                    drawLineMultiples();
+                        d3.selectAll("#tile").attr("opacity",1);
+                        d3.selectAll("#bar").attr("opacity",0.4);
+                        drawLineMultiples();
                 }
             });
 
@@ -849,7 +851,8 @@ function lineMultipleChart() {
         height=0,
         myData = [],
         myClass="",
-        filterType = "topN";
+        filterType = "topN",
+        yScaleUniversal = true;
 
     function my(svg) {
 
@@ -868,15 +871,26 @@ function lineMultipleChart() {
             wellGroup = Array.from(wellGroup);
 
             const yScale = d3.scaleLinear().domain([0,d3.max(filteredData, d => Math.max(d.ipc_revenue,d.actual_revenue))])
-                .range([chartHeight-10,0])
+                .range([chartHeight-10,0]);
+            const yScales = {};
+
+            wellGroup.forEach(function(d){
+                if(yScaleUniversal === true){
+                    yScales[d[0]] = yScale;
+                } else {
+                    yScales[d[0]] = d3.scaleLinear()
+                        .domain([0,d3.max(d[1], d => Math.max(d.ipc_revenue,d.actual_revenue))])
+                        .range([chartHeight-10,0])
+                }
+            })
 
             const line = d3.line()
                 .x(d => xScale(d.date))
-                .y(d => yScale(d.ipc_revenue));
+                .y(d => yScales[d.well_id](d.ipc_revenue));
 
             const area = d3.area()
                 .x(d => xScale(d.date))
-                .y0(d => yScale(d.actual_revenue))
+                .y0(d => yScales[d.well_id](d.actual_revenue))
                 .y1(yScale(0));
 
             const chartGroup = svg.selectAll('.chartGroup' + myClass)
@@ -884,7 +898,8 @@ function lineMultipleChart() {
                 .join(function(group){
                     var enter = group.append("g").attr("class","chartGroup" + myClass);
                     enter.append("rect").attr("class","wellRect");
-                    enter.append("text").attr("class","wellLabel")
+                    enter.append("text").attr("class","wellLabel");
+                    enter.append("text").attr("class","wellMaxLabel");
                     enter.append("path").attr("class","actualArea");
                     enter.append("path").attr("class","ipcLine");
                     return enter;
@@ -915,6 +930,14 @@ function lineMultipleChart() {
                 .text(d => myData.wellNames[d[0]].toUpperCase())
                 .attr("transform","translate(" + (2.5 + margins.left) + "," + (2.5 + margins.top) + ")")
 
+            chartGroup.select(".wellMaxLabel")
+                .attr("font-size",8)
+                .attr("fill","#A0A0A0")
+                .attr("x",2)
+                .attr("y",-2)
+                .text(d => d3.format("$,.0f")(yScales[d[0]].domain()[1]))
+                .attr("transform","translate(" + (2.5 + margins.left) + "," + (2.5 + margins.top) + ") rotate(90)")
+
 
             chartGroup.select(".wellRect")
                 .attr("width",chartWidth - 5)
@@ -935,12 +958,13 @@ function lineMultipleChart() {
 
         filterGroup.select(".filterText")
             .attr("id",(d,i) => "filterText" + i)
-            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("fill",d => d.includes("top") ? "#31a354":"#cb181d")
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.2)
             .attr("y",margins.top/2)
             .attr("cursor","pointer")
             .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' ').toUpperCase())
             .on("click",function(event,d){
-                d3.selectAll(".filterText").attr("opacity",0.4);
+                d3.selectAll(".filterText").attr("opacity",0.2);
                 d3.select(this).attr("opacity",1);
                 if(d === "top 25"){
                     filterType = "topN";
@@ -951,15 +975,50 @@ function lineMultipleChart() {
             });
 
 
-        var filterX = 0;
+        var filterX = margins.left;
         d3.selectAll(".filterText").each(function(){
             d3.select(this).attr("x",filterX);
             var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
             filterX += (textWidth + 5);
+        });
+
+
+        const axisOptions = ["universal","individual"];
+
+        const axisGroup = svg.selectAll('.axisGroup' + myClass)
+            .data(axisOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","axisGroup" + myClass);
+                enter.append("text").attr("class","axisText");
+                return enter;
+            });
+
+        axisGroup.select(".axisText")
+            .attr("id",(d,i) => "axisText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",margins.top/2)
+            .attr("cursor","pointer")
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' ').toUpperCase())
+            .on("click",function(event,d){
+                d3.selectAll(".axisText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                if(d === "universal"){
+                    yScaleUniversal = true;
+                } else {
+                    yScaleUniversal = false;
+                };
+                drawMultiples();
+            });
+
+
+        var axisX = margins.left;
+        d3.selectAll(".axisText").each(function(){
+            d3.select(this).attr("x",axisX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            axisX += (textWidth + 5);
         })
 
-        filterGroup.attr("transform","translate(" + ((width - filterX)/2) + ",0)");
-
+        axisGroup.attr("transform","translate(" + (width - margins.right - axisX) + ",0)");
 
 
     }
