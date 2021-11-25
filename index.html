@@ -88,38 +88,40 @@
         var thirtyDay = all_datasets[1].children[2].children[1].children[0].children[0].children[3];
         thirtyDay.children[0].expandable = true;
         thirtyDay.children[2].expandable = true;
+        thirtyDay.children[0].relative = true;
+        thirtyDay.children[2].relative = true;
         var top25 = thirtyDay.children[0].children;
         var filteredData = extraChartData.data.filter(f => f.position_flag === "topN");
-        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.actual_revenue), d => d.well_id));
+        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
         groupedFilteredData = groupedFilteredData.sort((a,b) => d3.descending(a[1],b[1]));
         var filterTotal = d3.sum(groupedFilteredData, d => d[1]);
         var topTotal = d3.sum(top25, d => d.value);
         top25.forEach(function(d,i){
             if(groupedFilteredData[i] === undefined){
                 d.name = "";
-                d.value = 0;
-                d.revenue = 0;
+                d.relativeValue = 0;
+                d.difference = 0;
             } else {
                 d.name = wellNames[groupedFilteredData[i][0]];
-                d.value = groupedFilteredData[i][1]/(filterTotal/topTotal);
-                d.revenue = groupedFilteredData[i][1];
+                d.relativeValue = groupedFilteredData[i][1]/(filterTotal/topTotal);
+                d.difference = groupedFilteredData[i][1];
             }
         })
         var bottom25 = thirtyDay.children[2].children;
         var filteredData = extraChartData.data.filter(f => f.position_flag === "bottomN");
-        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.actual_revenue), d => d.well_id));
+        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
         groupedFilteredData = groupedFilteredData.sort((a,b) => d3.ascending(a[1],b[1]));
         var filterTotal = d3.sum(groupedFilteredData, d => d[1]);
         var bottomTotal = d3.sum(bottom25, d => d.value);
         bottom25.forEach(function(d,i){
             if(groupedFilteredData[i] === undefined){
                 d.name = "";
-                d.value = 0;
-                d.revenue = 0;
+                d.relativeValue = 0;
+                d.difference = 0;
             } else {
                 d.name = wellNames[groupedFilteredData[i][0]];
-                d.value = groupedFilteredData[i][1]/(filterTotal/bottomTotal);
-                d.revenue = groupedFilteredData[i][1];
+                d.relativeValue = groupedFilteredData[i][1]/(filterTotal/bottomTotal);
+                d.difference = groupedFilteredData[i][1];
             }
         })
 

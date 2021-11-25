@@ -89,7 +89,7 @@ function mallMapChart() {
                             .style("visibility","visible")
                             .style("top",(event.offsetY + svgBounds.y) + "px")
                             .style("left",(event.offsetX + svgBounds.x + 10) + "px")
-                            .html(d.data.name + (d.data.revenue === undefined ? "" : "<br>Revenue: US$ " + d3.format(",.0f")(d.data.revenue)));
+                            .html(d.data.name + (d.data.difference === undefined ? "" : "<br>Difference: US$ " + d3.format(",.0f")(d.data.difference)));
                     }
                 })
                 .on("mouseout",function(){
@@ -150,8 +150,6 @@ function mallMapChart() {
         }
 
         function addFoldoutData(d){
-
-
             //copy the hierarchy
             var myCopy = {"value":d.value,"name":d.data.name,"id":d.data.id,"colors":d.data.colors,"children":[]};
             addChildren(d.children,myCopy);
@@ -171,8 +169,12 @@ function mallMapChart() {
 
             function addChildren(myDataset,currentCopy){
                 myDataset.forEach(function(c){
+                    var myValue = c.value;
+                    if(d.data.relative === true){
+                        myValue = c.data.relativeValue;
+                    }
                     currentCopy.children.push({
-                        "value":c.value,
+                        "value":myValue,
                         "name":c.data.name,
                         "id":c.data.id,
                         "colors":c.data.colors
@@ -742,6 +744,7 @@ function stackedBarChart() {
 
         filterGroup.select(".filterText")
             .attr("id",(d,i) => "filterText" + i)
+            .attr("fill",d => d.includes("top") ? "#31a354":(d.includes("bottom") ? "#cb181d" : "#333333"))
             .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
             .attr("y",height + margins.top + (margins.bottom/2))
             .attr("cursor","pointer")
