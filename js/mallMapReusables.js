@@ -589,11 +589,9 @@ function stackedBarChart() {
         myData = [],
         myClass="",
         stackType = "well_orientation",
-        barData = [],
-        barDataTop25 = [],
-        barDataBottom25 = [],
-        myKeys = [],
-        currentData = "0";
+        currentData = [],
+        currentDataIndex = "0",
+        barLayout = "stack";
 
     function my(svg) {
 
@@ -601,68 +599,23 @@ function stackedBarChart() {
 
         dateGroup = Array.from(dateGroup);
 
-        let [barData,barDataTop25,barDataBottom25,myKeys] = getDatabyStackOption();
-
-        function getDatabyStackOption(){
-            let myKeys = new Set();
-            myData.data.forEach(d => myKeys.add(d[stackType]));
-            myKeys = Array.from(myKeys);
-
-            const barData = [];
-            const barDataTop25 = [];
-            const barDataBottom25 = [];
-
-            dateGroup.forEach(function(d){
-                var myTotal = d3.sum(d[1], s => s.ipc_revenue);
-                var actualTotal = d3.sum(d[1], s => s.actual_revenue);
-                var stackData = Array.from(d3.rollup(d[1],v => d3.sum(v, s => s.actual_revenue)
-                    ,g => g[stackType]));
-                barData.push(getEntry(d[0],myTotal,actualTotal,stackData));
-                var filteredData = d[1].filter(f => f.position_flag === "topN")
-                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
-                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
-                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue),g => g[stackType]));
-                barDataTop25.push(getEntry(d[0],myTotal,actualTotal,stackData));
-                filteredData = d[1].filter(f => f.position_flag === "bottomN")
-                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
-                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
-                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue)
-                    ,g => g[stackType]));
-                barDataBottom25.push(getEntry(d[0],myTotal,actualTotal,stackData));
-            })
-
-            return [barData,barDataTop25,barDataBottom25,myKeys];
-
-            function getEntry(myDate,dataTotal,actualTotal,dataStack){
-
-                var currentEntry = {
-                    "date":myDate,
-                    "total": dataTotal,
-                    "actual_total":actualTotal
-                }
-                myKeys.forEach(function(k){
-                    var findValue = dataStack.find(f => f[0] === k);
-                    if(findValue === undefined){
-                        currentEntry[k] = 0;
-                    } else {
-                        currentEntry[k] = findValue[1] < 0 ? 0 : findValue[1];
-                    }
-                });
-                return currentEntry
-            }
-        }
-
+        currentData = getDatabyStackOption();
+        var axisScales = {}, rangeRemaining = 0,axisTransforms = {}, maxVals = [];
 
         let xDomain = new Set();
-        barData.forEach(d => xDomain.add(d.date));
+        currentData[currentDataIndex].forEach(d => xDomain.add(d.date));
         xDomain = Array.from(xDomain).sort((a,b) => d3.ascending(a,b));
 
         const xScale = d3.scaleBand().domain(xDomain).range([0,width]);
         const xScaleTime = d3.scaleTime().domain(d3.extent(xDomain)).range([0,width]);
+        const yScaleProportion = d3.scaleLinear().domain([0,1]).range([height,0]);
+        let yScale = "",scaleNumber = 0, myKeys = "",yMax = 0;
 
         if(d3.select(".xAxis" + myClass)._groups[0][0] === null) {
+            svg.append("g").attr("class","chartGroup"  + myClass)
             svg.append("g").attr("class","axis xAxis" + myClass);
             svg.append("g").attr("class","axis yAxis" + myClass);
+            svg.append("g").attr("class","axis yAxisProportion" + myClass);
             svg.append("g").attr("class","zeroLine" + myClass);
             svg.append("path").attr("class","ipcLine" + myClass);
         }
@@ -675,23 +628,104 @@ function stackedBarChart() {
             .style("text-anchor",(d,i) => i === 0 ? "start" : "end")
             .attr("y",4);
 
-        drawBar(barData);
+        d3.select(".yAxisProportion" + myClass)
+            .call(d3.axisLeft(yScaleProportion).tickFormat(d => d > 0 ? d3.format(".0%")(d) : "").tickSizeOuter(0))
+            .attr("transform","translate(" + margins.left + "," + margins.top + ")");
 
-        function drawBar(myBarData){
+        d3.selectAll(".yAxisProportion" + myClass + " .tick text")
+            .attr("x",-4)
 
-            const yMax = d3.max(myBarData, d => Math.max(d.total,d.actual_total));
-            const yScale = d3.scaleLinear().domain([0,yMax]).range([height,0]);
-            const scaleNumber = myKeys.length < 4 ? 4 : (myKeys.length > 9 ? 9 : myKeys.length);
+        drawBar(currentData[currentDataIndex],0);
+
+        function drawBar(myBarData,transitionTime){
+
+            yMax = d3.max(myBarData, d => Math.max(d.total,d.actual_total));
+            yScale = d3.scaleLinear().domain([0,yMax]).range([height,0]);
+            myKeys = currentData[3];
+            if(barLayout === "proportion"){
+                if(myKeys.indexOf("remainder") === -1){
+                    myKeys.push("remainder");
+                }
+            } else {
+                myKeys = myKeys.filter(f => f !== "remainder");
+            }
+            scaleNumber = myKeys.length < 4 ? 4 : (myKeys.length > 9 ? 9 : myKeys.length);
+            rangeRemaining =  height - ((myKeys.length-1)*10);
 
             const line = d3.line()
                 .x(d => xScale(d.date))
                 .y(d => yScale(d.total));
 
+            const lineProportion = d3.line()
+                .x(d => xScale(d.date))
+                .y(d => yScaleProportion(1));
+
+            var currentAxisTransform = 0;
+
+            maxVals = [];
+            myKeys.forEach(function(d,i){
+               maxVals[i] = d3.max(myBarData, s => Math.max(s[d], s[d + "_total"]));
+            })
+            var totalMax = d3.sum(maxVals);
+
+            myKeys.forEach(function(d,i){
+                var proportion = maxVals[i]/totalMax;
+                axisScales[d] = d3.scaleLinear().domain([0,maxVals[i]]).range([rangeRemaining*proportion,0]);
+                axisTransforms[d] = currentAxisTransform;
+                currentAxisTransform += (10 + (rangeRemaining*proportion))
+                if(myKeys.length === 1 && i === 0 || (maxVals.filter(f => f === 0).length >= (myKeys.length - 1))){
+                    axisScales[d] = yScale;
+                    currentAxisTransform = 0;
+                }
+            })
+
+            const splitAxisGroup = svg.selectAll('.splitAxisGroup' + myClass)
+                .data(myKeys)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","splitAxisGroup" + myClass);
+                    enter.append("g").attr("class","axis splitYAxis" + myClass);
+                    enter.append("path").attr("class","splitPath splitIpcLine" + myClass);
+                    return enter;
+                });
+
+            splitAxisGroup.select(".splitYAxis" + myClass)
+                .attr("visibility",barLayout === "split" ? "visible":"hidden")
+                .each(function(d){
+                    if(barLayout !== "proportion"){
+                        d3.select(this)
+                            .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
+                            .call(d3.axisLeft(axisScales[d]).ticks(2).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0));
+                    }});
+
+            splitAxisGroup.select(".splitIpcLine" + myClass)
+                .attr("visibility",barLayout === "split" ? "visible":"hidden")
+                .attr("d",d => barLayout === "proportion" ? "" : d3.line().x(l => xScale(l.date)).y(l => axisScales[d](l[d + "_total"]))(myBarData))
+                .attr("fill","none")
+                .attr("stroke","#31a354")
+                .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
+                .attr("opacity",0)
+                .interrupt()
+                .transition()
+                .delay(200)
+                .duration(transitionTime)
+                .attr("opacity",1);
+
+            d3.selectAll(".splitYAxis" + myClass + " .tick text")
+                .attr("x",-4)
+
+            if(barLayout === "proportion"){
+                var proportionKeys = JSON.parse(JSON.stringify(myKeys));
+                proportionKeys = proportionKeys.map(d => d = d + "_proportion");
+            }
             const stackedData = d3.stack()
-                .keys(myKeys)
+                .keys(barLayout === "proportion" ? proportionKeys : myKeys)
                 (myBarData);
 
+            d3.select(".yAxisProportion" + myClass)
+                .attr("visibility",barLayout === "proportion" ? "visible":"hidden");
+
             d3.select(".yAxis" + myClass)
+                .attr("visibility",barLayout === "stack" ? "visible":"hidden")
                 .call(d3.axisLeft(yScale).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0))
                 .attr("transform","translate(" + margins.left + "," + margins.top + ")");
 
@@ -699,12 +733,18 @@ function stackedBarChart() {
                 .attr("x",-4)
 
             d3.select(".ipcLine" + myClass)
-                .attr("d",line(myBarData))
+                .attr("visibility",barLayout === "stack" || barLayout === "proportion" ? "visible":"hidden")
+                .attr("d",barLayout === "proportion" ? lineProportion(myBarData) : line(myBarData))
                 .attr("fill","none")
                 .attr("stroke","#31a354")
-                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+                .attr("transform","translate(" + margins.left + "," + margins.top + ")")
+                .attr("opacity",0)
+                .interrupt()
+                .transition()
+                .duration(transitionTime)
+                .attr("opacity",1);
 
-            const stackGroup = svg.selectAll('.stackGroup' + myClass)
+            const stackGroup = svg.select(".chartGroup" + myClass).selectAll('.stackGroup' + myClass)
                 .data(stackedData)
                 .join(function(group){
                     var enter = group.append("g").attr("class","stackGroup" + myClass);
@@ -713,11 +753,15 @@ function stackedBarChart() {
                 });
 
             stackGroup.select(".stackGroup")
-                .attr("fill",(d,i) => d3.schemeBlues[scaleNumber][scaleNumber-(i+1)])
+                .attr("fill",(d,i) => myKeys[i] === "remainder" ? "#fee0d2" : d3.schemeBlues[scaleNumber][scaleNumber-(i+1)])
                 .attr("transform","translate(" + margins.left + "," + margins.top + ")");
 
             const barGroup = stackGroup.select(".stackGroup").selectAll('.barGroup' + myClass)
-                .data(d => d)
+                .data(function(d,i){
+                    var myDataset = d;
+                    myDataset.map(m => m.key = myKeys[i]);
+                    return myDataset;
+                })
                 .join(function(group){
                     var enter = group.append("g").attr("class","barGroup" + myClass);
                     enter.append("rect").attr("class","stackedRect");
@@ -726,9 +770,12 @@ function stackedBarChart() {
 
             barGroup.select(".stackedRect")
                 .attr("x",d => xScale(d.data.date))
-                .attr("y",d => yScale(d[1]))
-                .attr("height",d => yScale(d[0]) - yScale(d[1]))
                 .attr("width",xScale.bandwidth()-1)
+                .interrupt()
+                .transition()
+                .duration(transitionTime)
+                .attr("height",getBarHeight)
+                .attr("y",getBarYValue)
 
         }
 
@@ -746,7 +793,7 @@ function stackedBarChart() {
             .attr("id",(d,i) => "filterText" + i)
             .attr("fill",d => d.includes("top") ? "#31a354":(d.includes("bottom") ? "#cb181d" : "#333333"))
             .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
-            .attr("y",height + margins.top + (margins.bottom/2))
+            .attr("y",height + margins.top + (margins.bottom*0.4))
             .attr("cursor","pointer")
             .text((d,i) => (i === 0 ? "" : "|    ") + d.toUpperCase())
             .attr("transform","translate(" + margins.left + ",0)")
@@ -754,15 +801,13 @@ function stackedBarChart() {
                 d3.selectAll(".filterText").attr("opacity",0.4);
                 d3.select(this).attr("opacity",1);
                 if(d === "all"){
-                    drawBar(barData);
-                    currentData = 0;
+                    currentDataIndex = 0;
                 } else if (d === "top 25"){
-                    drawBar(barDataTop25);
-                    currentData = 1;
+                    currentDataIndex = 1;
                 } else {
-                    drawBar(barDataBottom25);
-                    currentData = 2;
+                    currentDataIndex = 2;
                 }
+                drawBar(currentData[currentDataIndex],0);
             });
 
         var filterX = 0;
@@ -773,6 +818,59 @@ function stackedBarChart() {
         })
 
         filterGroup.attr("transform","translate(" + ((width - filterX)/2) + ",0)");
+
+        const barOptions = ["stack","split","proportion"];
+
+        const barOptionsGroup = svg.selectAll('.barOptions' + myClass)
+            .data(barOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","barOptions" + myClass);
+                enter.append("text").attr("class","barOptionsText");
+                return enter;
+            });
+
+        barOptionsGroup.select(".barOptionsText")
+            .attr("id",(d,i) => "barOptionsText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",height + margins.top + (margins.bottom*0.4) + 25)
+            .attr("cursor","pointer")
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.toUpperCase())
+            .attr("transform","translate(" + margins.left + ",0)")
+            .on("click",function(event,d){
+                d3.selectAll(".barOptionsText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                barLayout = d;
+                drawBar(currentData[currentDataIndex],1000)
+            });
+
+        function getBarHeight(d){
+            if(barLayout === "split"){
+                return axisScales[d.key](0) - axisScales[d.key](d.data[d.key]);
+            } else if (barLayout === "stack"){
+                return yScale(d[0]) - yScale(d[1])
+            } else {
+                return yScaleProportion(d[0]) - yScaleProportion(d[1])
+            }
+        }
+        function getBarYValue(d){
+
+            if(barLayout === "split"){
+                return axisScales[d.key](d.data[d.key]) + axisTransforms[d.key]
+            } else if (barLayout === "stack"){
+                return  yScale(d[1])
+            } else {
+                return  yScaleProportion(d[1])
+            }
+        }
+
+        var barOptionsX = 0;
+        d3.selectAll(".barOptionsText").each(function(){
+            d3.select(this).attr("x",barOptionsX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            barOptionsX += (textWidth + 5);
+        })
+
+        barOptionsGroup.attr("transform","translate(" + ((width - barOptionsX)/2) + ",0)");
 
         const stackOptions = ["well_orientation","op_code","route_name"];
 
@@ -787,7 +885,7 @@ function stackedBarChart() {
         stackOptionsGroup.select(".stackOptionsText")
             .attr("id",(d,i) => "stackOptionsText" + i)
             .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
-            .attr("y",margins.top - (margins.bottom/2))
+            .attr("y",(margins.top * 0.6) - 20)
             .attr("cursor","pointer")
             .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' ').toUpperCase())
             .attr("transform","translate(" + margins.left + ",0)")
@@ -795,11 +893,59 @@ function stackedBarChart() {
                 d3.selectAll(".stackOptionsText").attr("opacity",0.4);
                 d3.select(this).attr("opacity",1);
                 stackType = d;
-                let newStackTypeData = getDatabyStackOption();
-                [barData,barDataTop25,barDataBottom25,myKeys] = newStackTypeData;
-                drawBar(newStackTypeData[currentData]);
+                currentData = getDatabyStackOption();
+                drawBar(currentData[currentDataIndex],0);
+                drawLegend(myKeys);
 
             });
+
+        drawLegend(myKeys);
+
+        function drawLegend(myLegendKeys){
+
+            myLegendKeys = JSON.parse(JSON.stringify(myLegendKeys));
+            myLegendKeys.push("IPC");
+
+            const legendGroup = svg.selectAll('.legendGroup' + myClass)
+                .data(myLegendKeys)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","legendGroup" + myClass);
+                    enter.append("rect").attr("class","legendRect");
+                    enter.append("text").attr("class","legendLabel");
+                    return enter;
+                });
+
+            legendGroup.select(".legendRect")
+                .attr("id",(d,i) => "legendRect" + i)
+                .attr("y",(margins.top*0.6))
+                .attr("width",15)
+                .attr("height",10)
+                .attr("fill",(d,i) => d === "IPC" ? "#31a354" : d3.schemeBlues[scaleNumber][scaleNumber-(i+1)]);
+
+            legendGroup.select(".legendLabel")
+                .attr("id",(d,i) => "legendLabel" + i)
+                .attr("y",(margins.top*0.6) + 9)
+                .attr("font-size",10)
+                .style("font-weight","normal")
+                .text(d => d.toUpperCase());
+
+
+            var legendX = 20,currentY = 0,maxLegendX=0;
+            d3.selectAll(".legendLabel").each(function(d,i){
+                d3.select("#legendRect" + i).attr("x", legendX-18).attr("transform","translate(0," + currentY + ")");
+                d3.select(this).attr("x",legendX).attr("transform","translate(0," + currentY + ")");
+                var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+                legendX += (textWidth + 22);
+                maxLegendX = Math.max(maxLegendX,legendX)
+                if(legendX > width){
+                    legendX = 20;
+                    currentY += 15;
+                }
+            })
+
+            legendGroup.attr("transform","translate(" + (((width - maxLegendX)/2)+margins.left) + ",0)");
+
+        }
 
 
         var stackX = 0;
@@ -811,6 +957,75 @@ function stackedBarChart() {
 
         stackOptionsGroup.attr("transform","translate(" + ((width - stackX)/2) + ",0)");
 
+
+        function getDatabyStackOption(){
+
+            let myKeys = new Set();
+            myData.data.forEach(d => myKeys.add(d[stackType]));
+            myKeys = Array.from(myKeys);
+
+            const barData = [];
+            const barDataTop25 = [];
+            const barDataBottom25 = [];
+
+            dateGroup.forEach(function(d){
+                var myTotal = d3.sum(d[1], s => s.ipc_revenue);
+                var actualTotal = d3.sum(d[1], s => s.actual_revenue);
+                var stackData = Array.from(d3.rollup(d[1],v => d3.sum(v, s => s.actual_revenue)
+                    ,g => g[stackType]));
+                var ipcStackData = Array.from(d3.rollup(d[1],v => d3.sum(v, s => s.ipc_revenue)
+                    ,g => g[stackType]));
+                barData.push(getEntry(d[0],myTotal,actualTotal,stackData,ipcStackData));
+                var filteredData = d[1].filter(f => f.position_flag === "topN")
+                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
+                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
+                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue),g => g[stackType]));
+                ipcStackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.ipc_revenue),g => g[stackType]));
+                barDataTop25.push(getEntry(d[0],myTotal,actualTotal,stackData,ipcStackData));
+                filteredData = d[1].filter(f => f.position_flag === "bottomN")
+                myTotal = d3.sum(filteredData, s => s.ipc_revenue);
+                actualTotal = d3.sum(filteredData, s => s.actual_revenue);
+                stackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue)
+                    ,g => g[stackType]));
+                ipcStackData = Array.from(d3.rollup(filteredData,v => d3.sum(v, s => s.actual_revenue)
+                    ,g => g[stackType]));
+                barDataBottom25.push(getEntry(d[0],myTotal,actualTotal,stackData,ipcStackData));
+            })
+
+            return [barData,barDataTop25,barDataBottom25,myKeys];
+
+            function getEntry(myDate,ipcTotal,actualTotal,dataStack,ipcStackData){
+
+                var currentEntry = {
+                    "date":myDate,
+                    "total": ipcTotal,
+                    "actual_total":actualTotal,
+                    "remainder_proportion":(ipcTotal-actualTotal)/ipcTotal
+                }
+                if(currentEntry.remainder_proportion < 0){currentEntry.remainder_proportion = 0};
+                if(currentEntry.remainder_proportion > 1){currentEntry.remainder_proportion = 1};
+
+                myKeys.forEach(function(k){
+                    var findValue = dataStack.find(f => f[0] === k);
+                    if(findValue === undefined){
+                        currentEntry[k] = 0;
+                        currentEntry[k + "_proportion"] = 0
+                    } else {
+                        currentEntry[k] = findValue[1] < 0 ? 0 : findValue[1];
+                        currentEntry[k + "_proportion"] = findValue[1]/ipcTotal
+                    }
+                    if(currentEntry[k + "_proportion"] < 0){currentEntry[k + "_proportion"] = 0};
+                    if(currentEntry[k + "_proportion"] > 1){currentEntry[k + "_proportion"] = 1};
+                    var findIpcValue = ipcStackData.find(f => f[0] === k);
+                    if(findIpcValue === undefined){
+                        currentEntry[k + "_total"] = 0;
+                    } else {
+                        currentEntry[k + "_total"] = findIpcValue[1] < 0 ? 0 : findIpcValue[1];
+                    }
+                });
+                return currentEntry
+            }
+        }
     }
 
     my.width = function(value) {
