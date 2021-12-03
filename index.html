@@ -12,8 +12,8 @@
 </head>
 <body>
 <div id="header_div">
-    <input type="radio" class="datasetChoice" name="datasetChoice" id="0" value="0" checked><label for="0">Dataset 1</label>
-    <input type="radio" class="datasetChoice" name="datasetChoice" id="1" value="1"><label for="1">Dataset 2</label>
+    <input type="radio" class="datasetChoice" name="datasetChoice" id="0" value="1" checked><label for="0">Dataset 1</label>
+    |  Select Individual Well Ids to see Status: <select class="wellColours"></select>
 </div>
 <div id="breadcrumb_div"></div>
 <div id="chart_div"></div>
@@ -31,7 +31,7 @@
         d3.json("data/dataset_1.json"),
         d3.json("data/dataset_2.json"),
         d3.csv("data/dev_production_data.csv"),
-
+        d3.csv("data/node_color_matrix.csv")
     ]
 
     Promise.all(promises).then(ready)
@@ -40,7 +40,6 @@
 
         var extraChartData = [],
         wellNames = {};
-
 
         all_datasets[2].forEach(function(d){
             if(d.current_status === "ACTIVE"){
@@ -61,7 +60,7 @@
         extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
         extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
 
-        var datasetChoice = "0";
+        var datasetChoice = "1";
 
         //add an id to each node (temp hopefully)
         all_datasets.forEach(function(d,i){
@@ -124,6 +123,52 @@
                 d.difference = groupedFilteredData[i][1];
             }
         })
+
+        var colourMatrix = all_datasets[3], matrixWellIds = new Set();
+        matrixWellIds.add("Functional View");
+
+        //add an id to each node (temp hopefully)
+        all_datasets.forEach(function(d,i){
+            if(i < 2){
+                var myID = 0;
+                d.id = "dataset_" + i + "_" + myID;
+                myID += 1;
+                d.children = addId(d.children,i);
+
+                function addId(myChildren,myIndex){
+                    myChildren.forEach(function(c){
+                        c.id = "dataset_" + myIndex + "_" + myID;
+                        var matrixColumn = colourMatrix.columns.indexOf(c.id);
+                        colourMatrix.forEach(function(m){
+                            matrixWellIds.add(m.well_id);
+                            if(matrixColumn > -1) {
+                                c.colors[m.well_id] = m[colourMatrix.columns[matrixColumn]];
+                            } else {
+                                c.colors[m.well_id] = "#F0F0F0";
+                            }
+                        })
+                        myID += 1
+                        if(c.children !== undefined){
+                            addId(c.children,myIndex);
+                        }
+                    })
+                    return myChildren;
+                }
+            }
+        })
+        matrixWellIds = Array.from(matrixWellIds.values());
+
+        d3.select(".wellColours")
+            .on("change",function(){
+                mallMap.selectedColor = this.value === "Functional View" ? "default" : this.value;
+                initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+            })
+            .selectAll("option")
+            .data(matrixWellIds)
+            .join("option")
+            .attr("id",d => d)
+            .attr("value", d => d)
+            .text(d => d);
 
         initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
 

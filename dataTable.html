@@ -35,18 +35,27 @@
     Promise.all(promises).then(ready)
 
     function ready(all_datasets) {
+        var wells = Array.from(d3.group(all_datasets[0],d => d.well_id).keys());
+        var textColumns = ['client_name', 'well_id', 'well_name', 'op_code', 'route_name', 'well_orientation', 'current_lift_type', 'current_status', '30_day_revenue_ipc_delta_flag']
         //loop through rows and add each column
         var table = d3.select("#myBaseTable");
         var columns = all_datasets[0].columns;
+        columns = columns.filter(f => f !== "DATE")
         var header = table.append("thead").append("tr");
         columns.forEach(function(c){
             header.append("th").text(c.replace(/_/g,' ').toUpperCase());
         })
         var tBody = table.append("tbody");
-        all_datasets[0].forEach(function(d){
+        wells.forEach(function(d){
             var row = tBody.append("tr");
             columns.forEach(function(c){
-                row.append("td").text(d[c]);
+                var myValue = "";
+                if(textColumns.indexOf(c) > -1){
+                    myValue = all_datasets[0].find(f => f.well_id === d)[c];
+                } else {
+                    myValue = d3.sum(all_datasets[0].filter(f => f.well_id === d), s => s[c])
+                }
+                row.append("td").text(myValue);
             })
         })
         $('#myBaseTable').DataTable({autoWidth:true});

@@ -4,19 +4,26 @@ function mallMapChart() {
         height=0,
         myData = [],
         myClass="",
-        midTransition = false;
+        midTransition = false,
+        radius = 0,
+        chartWidth = 0,
+        svg = "",
+        translateStr = "",
+        depthWidth = 0,
+        arc = "",
+        root = "";
 
-    function my(svg) {
+    function my(mySvg) {
 
         //svg = zoomSvg
         svg = d3.select(".zoomSvg" + myClass);
         //calc chartWidth + radius
-        const chartWidth = Math.min(width, height);
-        const radius = chartWidth/2;
+        chartWidth = Math.min(width, height);
+        radius = chartWidth/2;
         //define depthWidth and translateStr and arc
-        let depthWidth = 0;
-        const translateStr = "translate(" + (width/2) + "," + (height/2) + ")";
-        const arc = d3.arc()
+        depthWidth = 0;
+        translateStr = "translate(" + (width/2) + "," + (height/2) + ")";
+        arc = d3.arc()
             .startAngle(d => d.x0)
             .endAngle(d => d.x1)
             .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
@@ -26,379 +33,401 @@ function mallMapChart() {
 
         //format base data
         const myHierarchy = getHierarchy(myData);
-        const root = getPartition(myHierarchy);
+        root = getPartition(myHierarchy);
         //draw breadcrumbs,chart and then zoomtobounds
         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}])
         drawSunburst(root.descendants(),true);
         zoomToBounds(false,1000);
 
-        function drawSunburst(sunburstData,allData){
+        //cheat for poc demo
+        var relativeNodes = root.descendants().filter(d => d.data.relative !== undefined);
+        relativeNodes.forEach(function(d){
+            mallMap.relativeNodes[d.data.name] = d;
+        })
+        mallMap.relativeNodes["30 Day"] = root.descendants().find(f => f.data.name === "30 Day");
+    }
 
-            //calculate depthWidth (used for label visibility)
-            var minDepth = d3.min(sunburstData, d => d.depth);
-            var maxDepth = d3.max(sunburstData, d => d.depth);
-            depthWidth = radius/(maxDepth-minDepth);
-            midTransition = false;
+    function getHierarchy(myDataset){
+        var currentHierarchy = d3.hierarchy(myDataset);
+        return currentHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
+    }
 
-            //disable/enable buttons as needed
-            if(allData === true || sunburstData.data === undefined || sunburstData.data.expandable === undefined){
-                d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
-                d3.selectAll("#map").attr("cursor","disabled").attr("opacity",0.2);
-            } else {
-                d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
-                d3.selectAll("#map").attr("cursor","pointer").attr("opacity",1);
-            }
+    function getPartition(myDataset){
+        return d3.partition().size([2 * Math.PI, radius])(myDataset);
+    }
 
-            //reset mini mall map
-            d3.selectAll(".miniMapPath").attr("fill","#707070");
+    function measureWidth(my_text){
+        //from https://observablehq.com/@mbostock/fit-text-to-circle
+        const context = document.createElement("canvas").getContext("2d");
+        return context.measureText(my_text).width;
+    }
 
-            if(allData === false){
-                //if not all data, select relevant paths on mini mall map
-                sunburstData.descendants().forEach(d => d3.selectAll("#miniMap" + d.data.id).attr("fill",getPathFill));
-            }
+    function pathText(d,includeZero){
 
-            //path group
-            const pathGroup = svg.selectAll('.pathGroup' + myClass)
-                .data(sunburstData, d => allData + "_" + minDepth + "_" + maxDepth)
-                .join(function(group){
-                    var enter = group.append("g").attr("class","pathGroup" + myClass);
-                    enter.append("path").attr("class","sunburstPath");
-                    enter.append("path").attr("class","sunburstTexturePath");
-                    enter.append("text").attr("class","pathLabel");
-                    return enter;
-                });
-
-            pathGroup
-                .attr("transform",translateStr);
-
-            pathGroup.select(".sunburstTexturePath")
-                .attr("pointer-events","none")
-                .attr("fill", d => d.data.expandable === undefined ? "transparent" : mallMap.texture.url())
-                .attr("d", arc)
-
-            pathGroup.select(".sunburstPath")
-                .attr("opacity",1)
-                .attr("fill", getPathFill)
-                .attr("d", arc)
-                .on("mouseover",function(event,d){
-                    if(midTransition === false){
-                        d3.selectAll(".sunburstPath").attr("opacity",1);
-                        d3.select(this).interrupt().transition().duration(100).attr("opacity",0.5);
-                        var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
-                        d3.select(".d3_tooltip")
-                            .style("visibility","visible")
-                            .style("top",(event.offsetY + svgBounds.y) + "px")
-                            .style("left",(event.offsetX + svgBounds.x + 10) + "px")
-                            .html(d.data.name + (d.data.difference === undefined ? "" : "<br>Difference: US$ " + d3.format(",.0f")(d.data.difference)));
-                    }
-                })
-                .on("mouseout",function(){
-                    if(midTransition === false){
-                        d3.select(".d3_tooltip").style("visibility","hidden");
-                        d3.select(this).interrupt().transition().duration(100).attr("opacity",1);
-                    }
-                })
-                .on("click",function(event,d){
-                    if(d.depth > 0 && midTransition === false){
-                        //get breadcrumb data and redraw breadcrumb
-                        const breadcrumbData = getBreadcrumbs(d);
-                        drawBreadcrumbs(breadcrumbData);
-                        //if expandable, add foldoutdata
-                        if(d.data.expandable !== undefined){
-                            addFoldoutData(d);
-                        }
-                        //redraw sunburst and zoom.
-                        drawSunburst(d,false);
-                        zoomToBounds(d.data.expandable === undefined ? false : true,1000);
-                    }
-                });
-
-            pathGroup.select(".pathLabel")
-                .attr("opacity",1)
-                .attr("pointer-events", "none")
-                .attr("text-anchor", "middle")
-                .text(pathText)
-                .attr("transform", function(d) {
-                    const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-                    const y = (d.y0 + d.y1) / 2;
-                    return "rotate(" + (x - 90) + ") translate(" + y + ",0) rotate(" + (x < 180 ? 0 : 180) + ")";
-                })
-                .attr("fill", d => {
-                    while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
-                    return d3.lab(d.data.colors[selectedColor] || mallMap.colors.fillColor).l < 60 ? mallMap.colors.lightColor
-                        : mallMap.colors.darkColor;
-                });
-        }
-
-        function pathText(d,includeZero){
-
-            var heightCheck = (d.y0 + d.y1) / 2 * (d.x1 - d.x0);
-            heightCheck = includeZero === true ? heightCheck * mallMap.currentScale : heightCheck;
-            //first check arc height
-            if((heightCheck > (mallMap.fontSize/mallMap.currentScale))  && d.depth > 0){
-                //all good, now check width
-                if(measureWidth(d.data.name) < depthWidth){
-                    //only show name if there is space.
-                    return d.data.name;
-                } else {
-                    return "";
-                }
-
+        var heightCheck = (d.y0 + d.y1) / 2 * (d.x1 - d.x0);
+        heightCheck = includeZero === true ? heightCheck * mallMap.currentScale : heightCheck;
+        //first check arc height
+        if((heightCheck > (mallMap.fontSize/mallMap.currentScale))  && d.depth > 0){
+            //all good, now check width
+            if(measureWidth(d.data.name) < depthWidth){
+                //only show name if there is space.
+                return d.data.name;
             } else {
                 return "";
             }
+
+        } else {
+            return "";
         }
+    }
+function zoomToBounds(expandable,transitionTime) {
+    //get values
+    var [scale, newX, newY] = getValues();
 
-        function addFoldoutData(d){
-            //copy the hierarchy
-            var myCopy = {"value":d.value,"name":d.data.name,"id":d.data.id,"colors":d.data.colors,"children":[]};
-            addChildren(d.children,myCopy);
-            //flatten it and add partition/hierarchy
-            var flattenCopy = getPartition(getHierarchy(myCopy));
-            flattenCopy = flattenCopy.descendants();
-            //map foldoutPath for copied data.
-            flattenCopy.map(m => m.foldoutPath = arc(m));
-            d.descendants().map(function(m){
-                //add foldoutPath,dimensions + transform to current data
-                var myFoldout = flattenCopy.find(f => f.data.id === m.data.id);
-                m.foldoutPath = myFoldout.foldoutPath;
-                m.foldoutWidth = myFoldout.x1 - myFoldout.x0;
-                m.foldoutHeight = myFoldout.depth === 0 ? 0 : (myFoldout.y0 + myFoldout.y1)/2;
-                m.foldoutTransformX = myFoldout.depth === 0 ? 90 : (myFoldout.x0 + myFoldout.x1) / 2 * 180 / Math.PI;
-            });
+    //define transform string
+    const transform_str = d3.zoomIdentity
+        .translate(newX, newY)
+        .scale(scale);
 
-            function addChildren(myDataset,currentCopy){
-                myDataset.forEach(function(c){
-                    var myValue = c.value;
-                    if(d.data.relative === true){
-                        myValue = c.data.relativeValue;
-                    }
-                    currentCopy.children.push({
-                        "value":myValue,
-                        "name":c.data.name,
-                        "id":c.data.id,
-                        "colors":c.data.colors
-                    })
-                    var newChild = currentCopy.children[currentCopy.children.length-1];
-                    if(c.children !== undefined){
-                        newChild.children = [];
-                        addChildren(c.children,newChild)
-                    }
-                })
-            }
-        }
+    //store current scale and alter fontSize accordingly
+    mallMap.currentScale = scale;
+    updateFonts(false);
 
-        function getPathFill(d){
-            while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
-            return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.fillColor);
-        }
-
-        function measureWidth(my_text){
-            //from https://observablehq.com/@mbostock/fit-text-to-circle
-            const context = document.createElement("canvas").getContext("2d");
-            return context.measureText(my_text).width;
-        }
-
-        function drawBreadcrumbs(breadcrumbData){
-
-            //sort data and select svg
-            breadcrumbData = breadcrumbData.sort((a,b) => d3.ascending(a.depth,b.depth));
-            var mySvg = d3.select("." + breadcrumbSvg);
-            //join data
-            const breadcrumbGroup = mySvg.selectAll('.breadcrumbGroup' + myClass)
-                .data(breadcrumbData)
-                .join(function(group){
-                    var enter = group.append("g").attr("class","breadcrumbGroup" + myClass);
-                    enter.append("rect").attr("class","breadcrumbRect");
-                    enter.append("text").attr("class","breadcrumbLabel");
-                    return enter;
-                });
-
-            breadcrumbGroup.select(".breadcrumbRect")
-                .attr("id",(d,i) => "breadcrumbRect" + i)
-                .attr("height",15)
-                .attr("y",5)
-                .attr("rx",4)
-                .attr("ry",4)
-                .attr("stroke","#A0A0A0")
-                .attr("fill",d => d.fill)
-                .on("click",function(event,d){
-                    if(midTransition === false){
-                        var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
-                        var allData = false;
-                        if(d.depth > 0) {
-                            //reset breadcrumbs if > 0
-                            var breadcrumbData = getBreadcrumbs(myRoot);
-                            drawBreadcrumbs(breadcrumbData);
-                        } else {
-                            //or reset to default breadcrumb
-                            allData = true;
-                            drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
-                        }
-                        //draw chart and zoom.
-                        drawSunburst(myRoot,allData);
-                        zoomToBounds(myRoot.data.expandable === undefined ? false : true,1000);
-                    }
-                })
-
-            breadcrumbGroup.select(".breadcrumbLabel")
-                .attr("pointer-events","none")
-                .attr("id",(d,i) => "breadcrumbLabel" + i)
-                .attr("text-anchor","middle")
-                .attr("font-size",10)
-                .attr("y",16)
-                .text(d => d.label);
-
-            var breadcrumbX = 10;
-
-            //loop through and position breadcrumb rects dependent on label position
-            d3.selectAll(".breadcrumbLabel").each(function(d,i){
-                var myWidth = document.getElementById("breadcrumbLabel" + i).getBoundingClientRect().width;
-                d3.select("#breadcrumbRect" + i)
-                    .attr("x",breadcrumbX)
-                    .attr("width",myWidth + 10);
-
-                d3.select(this)
-                    .attr("x",breadcrumbX + ((myWidth+10)/2));
-
-                breadcrumbX += (myWidth + 15);
-
-            })
-
-        }
-
-        function getBreadcrumbs(d){
-            //loop through and add breadcrumb for each depth;
-            var currentDepth = d.depth;
-            var breadcrumbData = [], currentParent = d;
-            while (currentDepth > 0){
-                breadcrumbData.push({
-                    "depth":currentParent.depth,
-                    "label":currentParent.data.name,
-                    "fill":currentParent.depth === 0 ? "white" : getPathFill(currentParent)
-                })
-                currentDepth = currentParent.depth;
-                currentParent = currentParent.parent;
-            }
-            return breadcrumbData;
-        }
-
-        function getHierarchy(myDataset){
-            var currentHierarchy = d3.hierarchy(myDataset);
-            return currentHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
-        }
-
-        function getPartition(myDataset){
-            return d3.partition().size([2 * Math.PI, radius])(myDataset);
-        }
-
-        function zoomToBounds(expandable,transitionTime){
-            //get values
-            var [scale,newX,newY] = getValues();
-
-            //define transform string
-            const transform_str = d3.zoomIdentity
-                .translate(newX, newY)
-                .scale(scale);
-
-            //store current scale and alter fontSize accordingly
-            mallMap.currentScale = scale;
-            updateFonts(false);
-
-            //transform the svg
-            svg
-                .interrupt()
-                .transition()
-                .duration(transitionTime)
-                .attr("transform",transform_str)
-                .on("end",function(){
-                    //if expandable carry on
-                    if(expandable === true  && midTransition === false){
-                        d3.select(".d3_tooltip").style("visibility","hidden");
-                        midTransition = true; //so any other clicks are disabled while this is going on
-                        d3.selectAll(".pathLabel")
-                            .attr("opacity",1)
-                            .interrupt()
-                            .transition()
-                            .duration(500)
-                            .attr("opacity",0) //hide label
-                            .transition()
-                            .duration(0) //then change position
-                            .attr("transform", d =>  "rotate(" + (d.foldoutTransformX - 90) + ") translate("
-                                + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
-                            .transition()
-                            .delay(500)
-                            .duration(300) //and show label
-                            .attr("opacity",1);
-
-                        //remove all texture paths
-                        d3.selectAll(".sunburstTexturePath")
-                            .transition()
-                            .duration(500)
-                            .attr("opacity",0)
-                            .transition()
-                            .duration(0) //add new foldoutpath
-                            .attr("d", d =>  d.foldoutPath)
-                            .transition()
-                            .delay(500)
-                            .duration(500)
-                            .attr("opacity",1);
-
-                        d3.selectAll(".sunburstPath")
-                            .attr("opacity",1)
-                            .interrupt()
-                            .transition()
-                            .duration(500) //hide paths
-                            .attr("opacity",0)
-                            .transition()
-                            .duration(0) //add new foldoutpath
-                            .attr("d", d =>  d.foldoutPath)
-                            .on("end",function(){
-                                //get new scale and rescale
-                                var [zoomedScale,zoomedX,zoomedY] = getValues();
-                                svg.transition()
-                                    .duration(0)
-                                    .attr("transform",d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
-                                //PROBLEM IS THAT THE zoomScale is for the foldoutPath - not for every
-                                //mallMap.currentScale = zoomedScale;
-                                updateFonts(true);
-                            })
-                            .transition()
-                            .delay(500)
-                            .duration(500)
-                            .attr("opacity",1)
-                            .on("end",function(){
-                                midTransition = false;
-                            });
-                    } else {
-                        updateFonts(false,);
-                    }
-                })
-
-            function updateFonts(includeZero){
-                var fontSize = mallMap.fontSize/(includeZero === true ? 1 : mallMap.currentScale);
+    //transform the svg
+    svg
+        .interrupt()
+        .transition()
+        .duration(transitionTime)
+        .attr("transform", transform_str)
+        .on("end", function () {
+            //if expandable carry on
+            if (expandable === true && midTransition === false) {
+                d3.select(".d3_tooltip").style("visibility", "hidden");
+                midTransition = true; //so any other clicks are disabled while this is going on
                 d3.selectAll(".pathLabel")
-                    .style("font-size",fontSize)
-                    .attr("y", fontSize*0.3)
-                    .text(l => includeZero === false && l.depth === 0 ? "" : pathText(l,includeZero));
+                    .attr("opacity", 1)
+                    .interrupt()
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 0) //hide label
+                    .transition()
+                    .duration(0) //then change position
+                    .attr("transform", d => "rotate(" + (d.foldoutTransformX - 90) + ") translate("
+                        + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
+                    .transition()
+                    .delay(500)
+                    .duration(300) //and show label
+                    .attr("opacity", 1);
+
+                //remove all texture paths
+                d3.selectAll(".sunburstTexturePath")
+                    .transition()
+                    .duration(500)
+                    .attr("opacity", 0)
+                    .transition()
+                    .duration(0) //add new foldoutpath
+                    .attr("d", d => d.foldoutPath)
+                    .transition()
+                    .delay(500)
+                    .duration(500)
+                    .attr("opacity", 1);
+
+                d3.selectAll(".sunburstPath")
+                    .attr("opacity", 1)
+                    .interrupt()
+                    .transition()
+                    .duration(500) //hide paths
+                    .attr("opacity", 0)
+                    .transition()
+                    .duration(0) //add new foldoutpath
+                    .attr("d", d => d.foldoutPath)
+                    .on("end", function () {
+                        //get new scale and rescale
+                        var [zoomedScale, zoomedX, zoomedY] = getValues();
+                        svg.transition()
+                            .duration(0)
+                            .attr("transform", d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
+                        //PROBLEM IS THAT THE zoomScale is for the foldoutPath - not for every
+                        //mallMap.currentScale = zoomedScale;
+                        updateFonts(true);
+                    })
+                    .transition()
+                    .delay(500)
+                    .duration(500)
+                    .attr("opacity", 1)
+                    .on("end", function () {
+                        midTransition = false;
+                    });
+            } else {
+                updateFonts(false,);
             }
+        })
 
-            function getValues(){
+    function updateFonts(includeZero) {
+        var fontSize = mallMap.fontSize / (includeZero === true ? 1 : mallMap.currentScale);
+        d3.selectAll(".pathLabel")
+            .style("font-size", fontSize)
+            .attr("y", fontSize * 0.3)
+            .text(l => includeZero === false && l.depth === 0 ? "" : pathText(l, includeZero));
+    }
 
-                const chartGroup = d3.select(".zoomSvg" + myClass).node().getBBox();
+    function getValues() {
 
-                const scale = (chartWidth-20)/Math.max(chartGroup.width,chartGroup.height);
+        const chartGroup = d3.select(".zoomSvg" + myClass).node().getBBox();
 
-                const newX = ((width - (chartGroup.width*scale))/2) - (chartGroup.x*scale);
-                const newY = ((height - (chartGroup.height*scale))/2) - (chartGroup.y*scale);
+        const scale = (chartWidth - 20) / Math.max(chartGroup.width, chartGroup.height);
 
-                return [scale,newX,newY]
+        const newX = ((width - (chartGroup.width * scale)) / 2) - (chartGroup.x * scale);
+        const newY = ((height - (chartGroup.height * scale)) / 2) - (chartGroup.y * scale);
 
-            }
-
-        }
+        return [scale, newX, newY]
 
     }
+}
+    function drawSunburst(sunburstData,allData){
+
+        //calculate depthWidth (used for label visibility)
+        var minDepth = d3.min(sunburstData, d => d.depth);
+        var maxDepth = d3.max(sunburstData, d => d.depth);
+        depthWidth = radius/(maxDepth-minDepth);
+        midTransition = false;
+
+        //disable/enable buttons as needed
+        if(allData === true || sunburstData.data === undefined || sunburstData.data.expandable === undefined){
+            d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
+            d3.selectAll("#map").attr("cursor","disabled").attr("opacity",0.2);
+        } else {
+            d3.selectAll("#fan").attr("cursor","disabled").attr("opacity",0.2);
+            d3.selectAll("#map").attr("cursor","pointer").attr("opacity",1);
+        }
+
+        //reset mini mall map
+        d3.selectAll(".miniMapPath").attr("fill","#707070");
+
+        if(allData === false){
+            //if not all data, select relevant paths on mini mall map
+            sunburstData.descendants().forEach(d => d3.selectAll("#miniMap" + d.data.id).attr("fill",getPathFill));
+        }
+
+        //path group
+        const pathGroup = svg.selectAll('.pathGroup' + myClass)
+            .data(sunburstData, d => allData + "_" + minDepth + "_" + maxDepth)
+            .join(function(group){
+                var enter = group.append("g").attr("class","pathGroup" + myClass);
+                enter.append("path").attr("class","sunburstPath");
+                enter.append("path").attr("class","sunburstTexturePath");
+                enter.append("text").attr("class","pathLabel");
+                return enter;
+            });
+
+        pathGroup
+            .attr("transform",translateStr);
+
+        pathGroup.select(".sunburstTexturePath")
+            .attr("pointer-events","none")
+            .attr("fill", d => d.data.expandable === undefined ? "transparent" : mallMap.texture.url())
+            .attr("d", arc)
+
+        pathGroup.select(".sunburstPath")
+            .attr("opacity",1)
+            .attr("fill", getPathFill)
+            .attr("d", arc)
+            .on("mouseover",function(event,d){
+                if(midTransition === false){
+                    d3.selectAll(".sunburstPath").attr("opacity",1);
+                    d3.select(this).interrupt().transition().duration(100).attr("opacity",0.5);
+                    var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+                    d3.select(".d3_tooltip")
+                        .style("visibility","visible")
+                        .style("top",(event.offsetY + svgBounds.y) + "px")
+                        .style("left",(event.offsetX + svgBounds.x + 10) + "px")
+                        .html(d.data.name + (d.data.difference === undefined ? "" : "<br>Difference: US$ " + d3.format(",.0f")(d.data.difference)));
+                }
+            })
+            .on("mouseout",function(){
+                if(midTransition === false){
+                    d3.select(".d3_tooltip").style("visibility","hidden");
+                    d3.select(this).interrupt().transition().duration(100).attr("opacity",1);
+                }
+            })
+            .on("click",function(event,d){
+                if(d.depth > 0 && midTransition === false){
+                    //get breadcrumb data and redraw breadcrumb
+                    const breadcrumbData = getBreadcrumbs(d);
+                    drawBreadcrumbs(breadcrumbData);
+                    //if expandable, add foldoutdata
+                    if(d.data.expandable !== undefined){
+                        addFoldoutData(d);
+                    }
+                    //redraw sunburst and zoom.
+                    drawSunburst(d,false);
+                    zoomToBounds(d.data.expandable === undefined ? false : true,1000);
+                    if(d.data.name === "30 Day"){
+                        mallMap.stackedBarChart.changeFilter("all");
+                    } else if (d.data.relative !== undefined){
+                        mallMap.stackedBarChart.changeFilter(d.data.name.toLowerCase());
+                    }
+                }
+            });
+
+        pathGroup.select(".pathLabel")
+            .attr("opacity",1)
+            .attr("pointer-events", "none")
+            .attr("text-anchor", "middle")
+            .text(pathText)
+            .attr("transform", function(d) {
+                const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+                const y = (d.y0 + d.y1) / 2;
+                return "rotate(" + (x - 90) + ") translate(" + y + ",0) rotate(" + (x < 180 ? 0 : 180) + ")";
+            })
+            .attr("fill", d => {
+                while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
+                return d3.lab(d.data.colors[selectedColor] || mallMap.colors.fillColor).l < 60 ? mallMap.colors.lightColor
+                    : mallMap.colors.darkColor;
+            });
+    }
+
+    function addFoldoutData(d){
+        //copy the hierarchy
+        var myCopy = {"value":d.value,"name":d.data.name,"id":d.data.id,"colors":d.data.colors,"children":[]};
+        addChildren(d.children,myCopy);
+        //flatten it and add partition/hierarchy
+        var flattenCopy = getPartition(getHierarchy(myCopy));
+        flattenCopy = flattenCopy.descendants();
+        //map foldoutPath for copied data.
+        flattenCopy.map(m => m.foldoutPath = arc(m));
+        d.descendants().map(function(m){
+            //add foldoutPath,dimensions + transform to current data
+            var myFoldout = flattenCopy.find(f => f.data.id === m.data.id);
+            m.foldoutPath = myFoldout.foldoutPath;
+            m.foldoutWidth = myFoldout.x1 - myFoldout.x0;
+            m.foldoutHeight = myFoldout.depth === 0 ? 0 : (myFoldout.y0 + myFoldout.y1)/2;
+            m.foldoutTransformX = myFoldout.depth === 0 ? 90 : (myFoldout.x0 + myFoldout.x1) / 2 * 180 / Math.PI;
+        });
+
+        function addChildren(myDataset,currentCopy){
+            myDataset.forEach(function(c){
+                var myValue = c.value;
+                if(d.data.relative === true){
+                    myValue = c.data.relativeValue;
+                }
+                currentCopy.children.push({
+                    "value":myValue,
+                    "name":c.data.name,
+                    "id":c.data.id,
+                    "colors":c.data.colors
+                })
+                var newChild = currentCopy.children[currentCopy.children.length-1];
+                if(c.children !== undefined){
+                    newChild.children = [];
+                    addChildren(c.children,newChild)
+                }
+            })
+        }
+    }
+
+    function drawBreadcrumbs(breadcrumbData){
+
+        //sort data and select svg
+        breadcrumbData = breadcrumbData.sort((a,b) => d3.ascending(a.depth,b.depth));
+        var mySvg = d3.select("." + breadcrumbSvg);
+        //join data
+        const breadcrumbGroup = mySvg.selectAll('.breadcrumbGroup' + myClass)
+            .data(breadcrumbData)
+            .join(function(group){
+                var enter = group.append("g").attr("class","breadcrumbGroup" + myClass);
+                enter.append("rect").attr("class","breadcrumbRect");
+                enter.append("text").attr("class","breadcrumbLabel");
+                return enter;
+            });
+
+        breadcrumbGroup.select(".breadcrumbRect")
+            .attr("id",(d,i) => "breadcrumbRect" + i)
+            .attr("height",15)
+            .attr("y",5)
+            .attr("rx",4)
+            .attr("ry",4)
+            .attr("stroke","#A0A0A0")
+            .attr("fill",d => d.fill)
+            .on("click",function(event,d){
+                if(midTransition === false){
+                    var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
+                    var allData = false;
+                    if(d.depth > 0) {
+                        //reset breadcrumbs if > 0
+                        var breadcrumbData = getBreadcrumbs(myRoot);
+                        drawBreadcrumbs(breadcrumbData);
+                    } else {
+                        //or reset to default breadcrumb
+                        allData = true;
+                        drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
+                    }
+                    //draw chart and zoom.
+                    drawSunburst(myRoot,allData);
+                    zoomToBounds(myRoot.data.expandable === undefined ? false : true,1000);
+                }
+            })
+
+        breadcrumbGroup.select(".breadcrumbLabel")
+            .attr("pointer-events","none")
+            .attr("id",(d,i) => "breadcrumbLabel" + i)
+            .attr("text-anchor","middle")
+            .attr("font-size",10)
+            .attr("y",16)
+            .text(d => d.label);
+
+        var breadcrumbX = 10;
+
+        //loop through and position breadcrumb rects dependent on label position
+        d3.selectAll(".breadcrumbLabel").each(function(d,i){
+            var myWidth = document.getElementById("breadcrumbLabel" + i).getBoundingClientRect().width;
+            d3.select("#breadcrumbRect" + i)
+                .attr("x",breadcrumbX)
+                .attr("width",myWidth + 10);
+
+            d3.select(this)
+                .attr("x",breadcrumbX + ((myWidth+10)/2));
+
+            breadcrumbX += (myWidth + 15);
+
+        })
+
+    }
+
+    function getBreadcrumbs(d){
+        //loop through and add breadcrumb for each depth;
+        var currentDepth = d.depth;
+        var breadcrumbData = [], currentParent = d;
+        while (currentDepth > 0){
+            breadcrumbData.push({
+                "depth":currentParent.depth,
+                "label":currentParent.data.name,
+                "fill":currentParent.depth === 0 ? "white" : getPathFill(currentParent)
+            })
+            currentDepth = currentParent.depth;
+            currentParent = currentParent.parent;
+        }
+        return breadcrumbData;
+    }
+
+    function getPathFill(d){
+        while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
+        return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.fillColor);
+    }
+
+    my.drawRelativeGraph = function(graphData) {
+        const breadcrumbData = getBreadcrumbs(graphData);
+        drawBreadcrumbs(breadcrumbData);
+        //if expandable, add foldoutdata
+        if(graphData.data.expandable !== undefined){
+            addFoldoutData(graphData);
+        }
+        //redraw sunburst and zoom.
+        drawSunburst(graphData,false);
+        zoomToBounds(graphData.data.expandable === undefined ? false : true,1000);
+
+    }
+
 
     my.width = function(value) {
         if (!arguments.length) return width;
@@ -449,14 +478,14 @@ function miniMallMapChart() {
 
     function my(svg) {
 
-        const buttons = ["map","fan","bar","tile","table"];
-        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","table":"\uf0ce"};
+        const buttons = ["bar","tile","table","compare"];
+        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","table":"\uf0ce","compare":"\uf640"};
 
         const svgWidth = +d3.select("." + myClass + "Svg").attr("width");
 
         const chartWidth = Math.min(width, height);
         const buttonAvailableWidth = svgWidth - 10 - (chartWidth*1.4);
-        const buttonWidth = 80;
+        const buttonWidth = 110;
         let buttonTransformX = svgWidth - ((buttonWidth+7)*buttons.length) - (chartWidth*1.4) - 10;
         if(buttonAvailableWidth < ((buttonWidth+7)*buttons.length)){
             d3.select("." + myClass + "Svg").style("width",(((buttonWidth+5)*buttons.length) + (chartWidth*1.4) + 10) + "px")
@@ -517,16 +546,18 @@ function miniMallMapChart() {
             .attr("height",30)
             .attr("transform","translate(" + (10 + (chartWidth*1.4) + buttonTransformX) + ",5)")
             .on("click",function(event,d){
+                d3.selectAll(".buttonRect").attr("opacity",0.4);
                 if(d === "bar"){
-                    d3.selectAll("#tile").attr("opacity",0.4);
                     d3.selectAll("#bar").attr("opacity",1);
                     drawStackedBar();
                 } else if(d === "table"){
                     window.open("dataTable.html")
-                } else {
+                } else if(d === "tile"){
                         d3.selectAll("#tile").attr("opacity",1);
-                        d3.selectAll("#bar").attr("opacity",0.4);
                         drawLineMultiples();
+                } else {
+                    d3.selectAll("#compare").attr("opacity",1);
+                    drawPyramid();
                 }
             });
 
@@ -591,25 +622,33 @@ function stackedBarChart() {
         stackType = "well_orientation",
         currentData = [],
         currentDataIndex = "0",
-        barLayout = "stack";
+        barLayout = "stack",
+        axisScales = {},
+        rangeRemaining = 0,
+        axisTransforms = {},
+        maxVals = {},
+        xScale = "",
+        yScale = "",
+        yScaleProportion = "",
+        svg = "",
+        filterOptions = [];
 
-    function my(svg) {
+    function my(mySvg) {
+        svg = mySvg;
 
         let dateGroup = d3.group(myData.data, d => d.date);
-
         dateGroup = Array.from(dateGroup);
 
         currentData = getDatabyStackOption();
-        var axisScales = {}, rangeRemaining = 0,axisTransforms = {}, maxVals = [];
 
         let xDomain = new Set();
         currentData[currentDataIndex].forEach(d => xDomain.add(d.date));
         xDomain = Array.from(xDomain).sort((a,b) => d3.ascending(a,b));
 
-        const xScale = d3.scaleBand().domain(xDomain).range([0,width]);
+        xScale = d3.scaleBand().domain(xDomain).range([0,width]);
         const xScaleTime = d3.scaleTime().domain(d3.extent(xDomain)).range([0,width]);
-        const yScaleProportion = d3.scaleLinear().domain([0,1]).range([height,0]);
-        let yScale = "",scaleNumber = 0, myKeys = "",yMax = 0;
+        yScaleProportion = d3.scaleLinear().domain([0,1]).range([height,0]);
+        yScale = "",scaleNumber = 0, myKeys = "",yMax = 0;
 
         if(d3.select(".xAxis" + myClass)._groups[0][0] === null) {
             svg.append("g").attr("class","chartGroup"  + myClass)
@@ -637,149 +676,7 @@ function stackedBarChart() {
 
         drawBar(currentData[currentDataIndex],0);
 
-        function drawBar(myBarData,transitionTime){
-
-            yMax = d3.max(myBarData, d => Math.max(d.total,d.actual_total));
-            yScale = d3.scaleLinear().domain([0,yMax]).range([height,0]);
-            myKeys = currentData[3];
-            if(barLayout === "proportion"){
-                if(myKeys.indexOf("remainder") === -1){
-                    myKeys.push("remainder");
-                }
-            } else {
-                myKeys = myKeys.filter(f => f !== "remainder");
-            }
-            scaleNumber = myKeys.length < 4 ? 4 : (myKeys.length > 9 ? 9 : myKeys.length);
-            rangeRemaining =  height - ((myKeys.length-1)*10);
-
-            const line = d3.line()
-                .x(d => xScale(d.date))
-                .y(d => yScale(d.total));
-
-            const lineProportion = d3.line()
-                .x(d => xScale(d.date))
-                .y(d => yScaleProportion(1));
-
-            var currentAxisTransform = 0;
-
-            maxVals = [];
-            myKeys.forEach(function(d,i){
-               maxVals[i] = d3.max(myBarData, s => Math.max(s[d], s[d + "_total"]));
-            })
-            var totalMax = d3.sum(maxVals);
-
-            myKeys.forEach(function(d,i){
-                var proportion = maxVals[i]/totalMax;
-                axisScales[d] = d3.scaleLinear().domain([0,maxVals[i]]).range([rangeRemaining*proportion,0]);
-                axisTransforms[d] = currentAxisTransform;
-                currentAxisTransform += (10 + (rangeRemaining*proportion))
-                if(myKeys.length === 1 && i === 0 || (maxVals.filter(f => f === 0).length >= (myKeys.length - 1))){
-                    axisScales[d] = yScale;
-                    currentAxisTransform = 0;
-                }
-            })
-
-            const splitAxisGroup = svg.selectAll('.splitAxisGroup' + myClass)
-                .data(myKeys)
-                .join(function(group){
-                    var enter = group.append("g").attr("class","splitAxisGroup" + myClass);
-                    enter.append("g").attr("class","axis splitYAxis" + myClass);
-                    enter.append("path").attr("class","splitPath splitIpcLine" + myClass);
-                    return enter;
-                });
-
-            splitAxisGroup.select(".splitYAxis" + myClass)
-                .attr("visibility",barLayout === "split" ? "visible":"hidden")
-                .each(function(d){
-                    if(barLayout !== "proportion"){
-                        d3.select(this)
-                            .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
-                            .call(d3.axisLeft(axisScales[d]).ticks(2).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0));
-                    }});
-
-            splitAxisGroup.select(".splitIpcLine" + myClass)
-                .attr("visibility",barLayout === "split" ? "visible":"hidden")
-                .attr("d",d => barLayout === "proportion" ? "" : d3.line().x(l => xScale(l.date)).y(l => axisScales[d](l[d + "_total"]))(myBarData))
-                .attr("fill","none")
-                .attr("stroke","#31a354")
-                .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
-                .attr("opacity",0)
-                .interrupt()
-                .transition()
-                .delay(200)
-                .duration(transitionTime)
-                .attr("opacity",1);
-
-            d3.selectAll(".splitYAxis" + myClass + " .tick text")
-                .attr("x",-4)
-
-            if(barLayout === "proportion"){
-                var proportionKeys = JSON.parse(JSON.stringify(myKeys));
-                proportionKeys = proportionKeys.map(d => d = d + "_proportion");
-            }
-            const stackedData = d3.stack()
-                .keys(barLayout === "proportion" ? proportionKeys : myKeys)
-                (myBarData);
-
-            d3.select(".yAxisProportion" + myClass)
-                .attr("visibility",barLayout === "proportion" ? "visible":"hidden");
-
-            d3.select(".yAxis" + myClass)
-                .attr("visibility",barLayout === "stack" ? "visible":"hidden")
-                .call(d3.axisLeft(yScale).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0))
-                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
-
-            d3.selectAll(".yAxis" + myClass + " .tick text")
-                .attr("x",-4)
-
-            d3.select(".ipcLine" + myClass)
-                .attr("visibility",barLayout === "stack" || barLayout === "proportion" ? "visible":"hidden")
-                .attr("d",barLayout === "proportion" ? lineProportion(myBarData) : line(myBarData))
-                .attr("fill","none")
-                .attr("stroke","#31a354")
-                .attr("transform","translate(" + margins.left + "," + margins.top + ")")
-                .attr("opacity",0)
-                .interrupt()
-                .transition()
-                .duration(transitionTime)
-                .attr("opacity",1);
-
-            const stackGroup = svg.select(".chartGroup" + myClass).selectAll('.stackGroup' + myClass)
-                .data(stackedData)
-                .join(function(group){
-                    var enter = group.append("g").attr("class","stackGroup" + myClass);
-                    enter.append("g").attr("class","stackGroup");
-                    return enter;
-                });
-
-            stackGroup.select(".stackGroup")
-                .attr("fill",(d,i) => myKeys[i] === "remainder" ? "#fee0d2" : d3.schemeBlues[scaleNumber][scaleNumber-(i+1)])
-                .attr("transform","translate(" + margins.left + "," + margins.top + ")");
-
-            const barGroup = stackGroup.select(".stackGroup").selectAll('.barGroup' + myClass)
-                .data(function(d,i){
-                    var myDataset = d;
-                    myDataset.map(m => m.key = myKeys[i]);
-                    return myDataset;
-                })
-                .join(function(group){
-                    var enter = group.append("g").attr("class","barGroup" + myClass);
-                    enter.append("rect").attr("class","stackedRect");
-                    return enter;
-                });
-
-            barGroup.select(".stackedRect")
-                .attr("x",d => xScale(d.data.date))
-                .attr("width",xScale.bandwidth()-1)
-                .interrupt()
-                .transition()
-                .duration(transitionTime)
-                .attr("height",getBarHeight)
-                .attr("y",getBarYValue)
-
-        }
-
-        const filterOptions = ["all","top 25","bottom 25"];
+        filterOptions = ["all","top 25","bottom 25"];
 
         const filterGroup = svg.selectAll('.filterGroup' + myClass)
             .data(filterOptions)
@@ -797,18 +694,7 @@ function stackedBarChart() {
             .attr("cursor","pointer")
             .text((d,i) => (i === 0 ? "" : "|    ") + d.toUpperCase())
             .attr("transform","translate(" + margins.left + ",0)")
-            .on("click",function(event,d){
-                d3.selectAll(".filterText").attr("opacity",0.4);
-                d3.select(this).attr("opacity",1);
-                if(d === "all"){
-                    currentDataIndex = 0;
-                } else if (d === "top 25"){
-                    currentDataIndex = 1;
-                } else {
-                    currentDataIndex = 2;
-                }
-                drawBar(currentData[currentDataIndex],0);
-            });
+            .on("click",filterClick);
 
         var filterX = 0;
         d3.selectAll(".filterText").each(function(){
@@ -842,26 +728,6 @@ function stackedBarChart() {
                 barLayout = d;
                 drawBar(currentData[currentDataIndex],1000)
             });
-
-        function getBarHeight(d){
-            if(barLayout === "split"){
-                return axisScales[d.key](0) - axisScales[d.key](d.data[d.key]);
-            } else if (barLayout === "stack"){
-                return yScale(d[0]) - yScale(d[1])
-            } else {
-                return yScaleProportion(d[0]) - yScaleProportion(d[1])
-            }
-        }
-        function getBarYValue(d){
-
-            if(barLayout === "split"){
-                return axisScales[d.key](d.data[d.key]) + axisTransforms[d.key]
-            } else if (barLayout === "stack"){
-                return  yScale(d[1])
-            } else {
-                return  yScaleProportion(d[1])
-            }
-        }
 
         var barOptionsX = 0;
         d3.selectAll(".barOptionsText").each(function(){
@@ -1028,7 +894,190 @@ function stackedBarChart() {
         }
     }
 
-    my.width = function(value) {
+    function drawBar(myBarData,transitionTime){
+
+        yMax = d3.max(myBarData, d => Math.max(d.total,d.actual_total));
+        yScale = d3.scaleLinear().domain([0,yMax]).range([height,0]);
+        myKeys = currentData[3];
+        if(barLayout === "proportion"){
+            if(myKeys.indexOf("remainder") === -1){
+                myKeys.push("remainder");
+            }
+        } else {
+            myKeys = myKeys.filter(f => f !== "remainder");
+        }
+        scaleNumber = myKeys.length < 4 ? 4 : (myKeys.length > 9 ? 9 : myKeys.length);
+        rangeRemaining =  height - ((myKeys.length-1)*10);
+
+        const line = d3.line()
+            .x(d => xScale(d.date))
+            .y(d => yScale(d.total));
+
+        const lineProportion = d3.line()
+            .x(d => xScale(d.date))
+            .y(d => yScaleProportion(1));
+
+        var currentAxisTransform = 0;
+
+        maxVals = [];
+        myKeys.forEach(function(d,i){
+            maxVals[i] = d3.max(myBarData, s => Math.max(s[d], s[d + "_total"]));
+        })
+        var totalMax = d3.sum(maxVals);
+
+        myKeys.forEach(function(d,i){
+            var proportion = maxVals[i]/totalMax;
+            axisScales[d] = d3.scaleLinear().domain([0,maxVals[i]]).range([rangeRemaining*proportion,0]);
+            axisTransforms[d] = currentAxisTransform;
+            currentAxisTransform += (10 + (rangeRemaining*proportion))
+            if(myKeys.length === 1 && i === 0 || (maxVals.filter(f => f === 0).length >= (myKeys.length - 1))){
+                axisScales[d] = yScale;
+                currentAxisTransform = 0;
+            }
+        })
+
+        const splitAxisGroup = svg.selectAll('.splitAxisGroup' + myClass)
+            .data(myKeys)
+            .join(function(group){
+                var enter = group.append("g").attr("class","splitAxisGroup" + myClass);
+                enter.append("g").attr("class","axis splitYAxis" + myClass);
+                enter.append("path").attr("class","splitPath splitIpcLine" + myClass);
+                return enter;
+            });
+
+        splitAxisGroup.select(".splitYAxis" + myClass)
+            .attr("visibility",barLayout === "split" ? "visible":"hidden")
+            .each(function(d){
+                if(barLayout !== "proportion"){
+                    d3.select(this)
+                        .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
+                        .call(d3.axisLeft(axisScales[d]).ticks(2).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0));
+                }});
+
+        splitAxisGroup.select(".splitIpcLine" + myClass)
+            .attr("visibility",barLayout === "split" ? "visible":"hidden")
+            .attr("d",d => barLayout === "proportion" ? "" : d3.line().x(l => xScale(l.date)).y(l => axisScales[d](l[d + "_total"]))(myBarData))
+            .attr("fill","none")
+            .attr("stroke","#31a354")
+            .attr("transform",d => "translate(" + margins.left + "," + (margins.top + axisTransforms[d]) + ")")
+            .attr("opacity",0)
+            .interrupt()
+            .transition()
+            .delay(200)
+            .duration(transitionTime)
+            .attr("opacity",1);
+
+        d3.selectAll(".splitYAxis" + myClass + " .tick text")
+            .attr("x",-4)
+
+        if(barLayout === "proportion"){
+            var proportionKeys = JSON.parse(JSON.stringify(myKeys));
+            proportionKeys = proportionKeys.map(d => d = d + "_proportion");
+        }
+        const stackedData = d3.stack()
+            .keys(barLayout === "proportion" ? proportionKeys : myKeys)
+            (myBarData);
+
+        d3.select(".yAxisProportion" + myClass)
+            .attr("visibility",barLayout === "proportion" ? "visible":"hidden");
+
+        d3.select(".yAxis" + myClass)
+            .attr("visibility",barLayout === "stack" ? "visible":"hidden")
+            .call(d3.axisLeft(yScale).tickFormat(d => d > 0 ? d3.format("$.2s")(d) : "").tickSizeOuter(0))
+            .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+        d3.selectAll(".yAxis" + myClass + " .tick text")
+            .attr("x",-4)
+
+        d3.select(".ipcLine" + myClass)
+            .attr("visibility",barLayout === "stack" || barLayout === "proportion" ? "visible":"hidden")
+            .attr("d",barLayout === "proportion" ? lineProportion(myBarData) : line(myBarData))
+            .attr("fill","none")
+            .attr("stroke","#31a354")
+            .attr("transform","translate(" + margins.left + "," + margins.top + ")")
+            .attr("opacity",0)
+            .interrupt()
+            .transition()
+            .duration(transitionTime)
+            .attr("opacity",1);
+
+        const stackGroup = svg.select(".chartGroup" + myClass).selectAll('.stackGroup' + myClass)
+            .data(stackedData)
+            .join(function(group){
+                var enter = group.append("g").attr("class","stackGroup" + myClass);
+                enter.append("g").attr("class","stackGroup");
+                return enter;
+            });
+
+        stackGroup.select(".stackGroup")
+            .attr("fill",(d,i) => myKeys[i] === "remainder" ? "#fee0d2" : d3.schemeBlues[scaleNumber][scaleNumber-(i+1)])
+            .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+        const barGroup = stackGroup.select(".stackGroup").selectAll('.barGroup' + myClass)
+            .data(function(d,i){
+                var myDataset = d;
+                myDataset.map(m => m.key = myKeys[i]);
+                return myDataset;
+            })
+            .join(function(group){
+                var enter = group.append("g").attr("class","barGroup" + myClass);
+                enter.append("rect").attr("class","stackedRect");
+                return enter;
+            });
+
+        barGroup.select(".stackedRect")
+            .attr("x",d => xScale(d.data.date))
+            .attr("width",xScale.bandwidth()-1)
+            .interrupt()
+            .transition()
+            .duration(transitionTime)
+            .attr("height",getBarHeight)
+            .attr("y",getBarYValue)
+
+    }
+
+    function getBarHeight(d){
+        if(barLayout === "split"){
+            return axisScales[d.key](0) - axisScales[d.key](d.data[d.key]);
+        } else if (barLayout === "stack"){
+            return yScale(d[0]) - yScale(d[1])
+        } else {
+            return yScaleProportion(d[0]) - yScaleProportion(d[1])
+        }
+    }
+    function getBarYValue(d){
+
+        if(barLayout === "split"){
+            return axisScales[d.key](d.data[d.key]) + axisTransforms[d.key]
+        } else if (barLayout === "stack"){
+            return  yScale(d[1])
+        } else {
+            return  yScaleProportion(d[1])
+        }
+    }
+
+    function filterClick(event,d,i){
+        d3.selectAll(".filterText").attr("opacity",0.4);
+        d3.select("#filterText" + i).attr("opacity",1);
+        if(d === "all"){
+            mallMap.sunburstChart.drawRelativeGraph(mallMap.relativeNodes["30 Day"])
+            currentDataIndex = 0;
+        } else if (d === "top 25"){
+            mallMap.sunburstChart.drawRelativeGraph(mallMap.relativeNodes["Top 25"])
+            currentDataIndex = 1;
+        } else {
+            mallMap.sunburstChart.drawRelativeGraph(mallMap.relativeNodes["Bottom 25"])
+            currentDataIndex = 2;
+        }
+        drawBar(currentData[currentDataIndex],0);
+    }
+
+    my.changeFilter = function(myVal){
+        console.log(myVal,filterOptions.indexOf(myVal));
+        filterClick({},myVal,filterOptions.indexOf(myVal));
+    }
+
+        my.width = function(value) {
         if (!arguments.length) return width;
         width = value;
         return my;
@@ -1269,6 +1318,249 @@ function lineMultipleChart() {
     my.myClass = function(value) {
         if (!arguments.length) return myClass;
         myClass = value;
+        return my;
+    };
+
+    return my;
+}
+
+
+
+function pyramidChart() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="",
+        axisWidth = 20,
+        scaleType = "individual";
+
+    function my(svg) {
+
+        var groupData = [{"name":"Top 25","align":"left","dataValue":"topN","colour":"green","sort_order":"descending"},
+            {"name":"Bottom 25","align":"right","dataValue":"bottomN","colour":"red","sort_order":"ascending"}];
+
+        var xMax = 0, ySet = new Set();
+        groupData.forEach(function(d,index){
+            var filteredData = myData.data.filter(f => f.position_flag === d.dataValue);
+            var ipc = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.ipc_revenue), r => r.well_id));
+            var actual = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.actual_revenue), r => r.well_id));
+            actual = actual.sort((a,b) => d3[d.sort_order](+a[1],+b[1]));
+            currentData = [];
+            actual.forEach(function(a,i){
+                var myIpc = ipc.find(f => f[0] === a[0])[1];
+                currentData.push({
+                    "well_id":a[0],
+                    "wellName":myData.wellNames[a[0]],
+                    "value": +a[1],
+                    "ipc":+myIpc,
+                    "percent":+a[1]/+myIpc,
+                    "align":d.align,
+                    "position": i + 1,
+                    "colour":d.colour,
+                    "index":index,
+                    "name":d.name
+                })
+                ySet.add(i+1);
+            })
+            xMax = Math.max(xMax,d3.max(currentData, d => d.value));
+            d.data = currentData
+        })
+
+        ySet = Array.from(ySet.values());
+        var xScale = d3.scaleLinear().domain([0,xMax]).range([0,(width - margins.left - margins.right - axisWidth)/2])
+        var yScale = d3.scaleBand().domain(ySet).range([0,height - margins.top - margins.bottom]);
+        var xScales = [];
+        changeScales();
+
+        function changeScales(){
+            groupData.forEach(function(d,i){
+                if(scaleType === "uniform"){
+                    xScales[i] = xScale;
+                } else {
+                    var myMax = d3.max(d.data, m => m.value);
+                    xScales[i] = d3.scaleLinear().domain([0,myMax]).range([0,(width - margins.left - margins.right - axisWidth)/2])
+                }
+            })
+        }
+
+        if(d3.select(".xAxis" + myClass)._groups[0][0] === null) {
+            svg.append("g").attr("class", "axis yAxisPyramid" + myClass)
+        }
+
+        d3.select(".yAxisPyramid" + myClass)
+            .call(d3.axisLeft(yScale).tickSizeOuter(0))
+            .attr("transform","translate(" + (width/2) + "," + margins.top + ")");
+
+        d3.selectAll(".yAxisPyramid" + myClass + " path")
+            .style("display","none");
+
+        d3.selectAll(".yAxisPyramid" + myClass + " .tick text")
+            .attr("x",0)
+            .style("text-anchor","middle")
+
+        drawBars();
+
+        function drawBars(){
+            const groupDataGroup = svg.selectAll('.groupDataGroup' + myClass)
+                .data(groupData)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","groupDataGroup" + myClass);
+                    enter.append("line").attr("class","axisLine");
+                    enter.append("text").attr("class","groupTitle");
+                    enter.append("g").attr("class","barGroup");
+                    return enter;
+                });
+
+            groupDataGroup.select(".groupTitle")
+                .attr("x", d => (width/2) + (d.align === "left" ? -(axisWidth/2) : (axisWidth/2)))
+                .attr("text-anchor",d => d.align === "left" ? "end" : "start")
+                .attr("y",margins.top - 5)
+                .text(d => d.name.toUpperCase());
+
+            groupDataGroup.select(".axisLine")
+                .attr("x1",d =>  (width/2) + (d.align === "left" ? -(axisWidth/2) : (axisWidth/2)))
+                .attr("x2",d => (width/2) + (d.align === "left" ? -(axisWidth/2) : (axisWidth/2)))
+                .attr("y1",margins.top)
+                .attr("y2",height - margins.bottom)
+                .attr("stroke-width",1)
+                .attr("stroke","#A0A0A0");
+
+            groupDataGroup.select(".barGroup")
+                .attr("transform","translate(0," + margins.top + ")");
+
+            const barGroup = groupDataGroup.select(".barGroup").selectAll('.barGroup' + myClass)
+                .data(d => d.data)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","barGroup" + myClass);
+                    enter.append("rect").attr("class","pyramidBar");
+                    enter.append("text").attr("class","pyramidLabel");
+                    return enter;
+                });
+
+            barGroup.select(".pyramidBar")
+                .attr("x",d =>  (width/2) + (d.align === "right" ? (axisWidth/2): - (xScales[d.index](d.value) + (axisWidth/2))))
+                .attr("y",d => yScale(d.position))
+                .attr("width",d => xScales[d.index](d.value))
+                .attr("height",d => yScale.bandwidth()-2)
+                .attr("cursor","pointer")
+                .attr("fill",d => d.colour)
+                .on("mouseover",function(event,d){
+                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",0.5);
+                    d3.select(this).interrupt().attr("opacity",1);
+                    var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+                    var tooltipText = d.name.toUpperCase() + "<br><span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Revenue: US$" + d3.format(".3s")(d.value)
+                        +  "<br>Ipc Revenue: US$" + d3.format(".3s")(d.ipc)
+                        + "<br>Percent Revenue: " + d3.format(".1%")(d.percent) + "</span>";
+
+                        d3.select(".d3_tooltip")
+                        .style("visibility","visible")
+                        .style("top",(event.offsetY + svgBounds.y) + "px")
+                        .style("left",(event.offsetX + svgBounds.x + 10) + "px")
+                        .html(tooltipText);
+
+                })
+                .on("mouseout",function(){
+                    d3.select(".d3_tooltip").style("visibility","hidden");
+                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",1);
+                })
+
+            barGroup.select(".pyramidLabel")
+                .attr("text-anchor",d => d.align === "left" ? "end" : "start")
+                .attr("x",d =>  (width/2) + (d.align === "right" ? ((axisWidth/2) + 2 + xScales[d.index](d.value))
+                    : - ( 2 + xScales[d.index](d.value) + (axisWidth/2))))
+                .attr("y",d => yScale(d.position) + (yScale.bandwidth()/2) + 5)
+                .attr("font-size",10)
+                .attr("cursor","pointer")
+                .attr("font-weight","normal")
+                .text(d => "US$" + d3.format(".3s")(d.value))
+                .on("mouseover",function(event,d){
+                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",0.5);
+                    d3.select(this).interrupt().attr("opacity",1);
+                    var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+                    var tooltipText = d.name.toUpperCase() + "<br><span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Revenue: US$" + d3.format(".3s")(d.value)
+                        +  "<br>Ipc Revenue: US$" + d3.format(".3s")(d.ipc)
+                        + "<br>Percent Revenue: " + d3.format(".1%")(d.percent) + "</span>";
+
+                    d3.select(".d3_tooltip")
+                        .style("visibility","visible")
+                        .style("top",(event.offsetY + svgBounds.y) + "px")
+                        .style("left",(event.offsetX + svgBounds.x + 10) + "px")
+                        .html(tooltipText);
+
+                })
+                .on("mouseout",function(){
+                    d3.select(".d3_tooltip").style("visibility","hidden");
+                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",1);
+                })
+        }
+
+        const axisOptions = ["Individual Scales","Uniform Scales"];
+
+        const axisGroup = svg.selectAll('.axisGroup' + myClass)
+            .data(axisOptions)
+            .join(function(group){
+                var enter = group.append("g").attr("class","axisGroup" + myClass);
+                enter.append("text").attr("class","axisText");
+                return enter;
+            });
+
+        axisGroup.select(".axisText")
+            .attr("id",(d,i) => "axisText" + i)
+            .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
+            .attr("y",margins.top-20)
+            .attr("cursor","pointer")
+            .attr("font-size",10)
+            .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' '))
+            .on("click",function(event,d){
+                d3.selectAll(".axisText").attr("opacity",0.4);
+                d3.select(this).attr("opacity",1);
+                scaleType = d.split(" ")[0].toLowerCase();
+                changeScales();
+                drawBars();
+            });
+
+        var axisX = margins.left;
+        d3.selectAll(".axisText").each(function(){
+            d3.select(this).attr("x",axisX);
+            var textWidth = document.getElementById(this.id).getBoundingClientRect().width;
+            axisX += (textWidth + 5);
+        })
+
+        axisGroup.attr("transform","translate(" + (width - 5 - axisX) + ",0)");
+
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
+        return my;
+    };
+
+    my.margins = function(value) {
+        if (!arguments.length) return margins;
+        margins = value;
         return my;
     };
 

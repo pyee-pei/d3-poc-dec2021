@@ -22,15 +22,15 @@ function drawMallMap(myData,divId,breadcrumbDivId){
     var width = +svg.attr("width");
     var height = +svg.attr("height");
 
-    var my_chart = mallMapChart()
+    mallMap.sunburstChart = mallMapChart()
         .width(width)
         .height(height)
         .myData(myData)
         .myClass(divId)
-        .selectedColor("default")
+        .selectedColor(mallMap.selectedColor)
         .breadcrumbSvg(breadcrumbDivId + "Svg");
 
-    my_chart(svg);
+    mallMap.sunburstChart(svg);
 }
 
 function drawMiniMallMap(myData,divId){
@@ -59,14 +59,14 @@ function drawStackedBar(){
     var width = +svg.attr("width");
     var margins = {"left":width*0.2,"right":width*0.2,"top":height*0.2,"bottom":height*0.2};
 
-    var my_chart = stackedBarChart()
+    mallMap.stackedBarChart = stackedBarChart()
         .width(width*0.6)
         .height(height*0.6)
         .margins(margins)
         .myData(mallMap.extraChartData)
         .myClass(mallMap.extraChartDivId );
 
-    my_chart(svg);
+    mallMap.stackedBarChart(svg);
 }
 
 function drawLineMultiples(){
@@ -85,6 +85,27 @@ function drawLineMultiples(){
         .margins(margins)
         .myData(mallMap.extraChartData)
         .myClass(mallMap.extraChartDivId );
+
+    my_chart(svg);
+}
+
+
+function drawPyramid(){
+
+    //quick win, will make this better
+    d3.select("." + mallMap.extraChartDivId  + "Svg").selectAll("*").remove();
+    var svg = d3.select("." + mallMap.extraChartDivId  + "Svg");
+
+    var height = +svg.attr("height");
+    var width = +svg.attr("width");
+    var margins = {"left":50,"right":50,"top":40,"bottom":30};
+
+    var my_chart = pyramidChart()
+        .width(width)
+        .height(height)
+        .margins(margins)
+        .myData(mallMap.extraChartData)
+        .myClass(mallMap.extraChartDivId);
 
     my_chart(svg);
 }
