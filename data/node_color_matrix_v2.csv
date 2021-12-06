@@ -1,0 +1,240 @@
+﻿well_id,well_or_group,name,dataset_1_177,dataset_1_14,dataset_1_13,dataset_1_12
+,group,2018 Vintage,DarkGray,Red,Red,Green
+,group,2019 Vintage,DarkGray,Red,Red,Green
+,group,2020 Vintage,Green,DarkGray,Yellow,Red
+,group,2021 Vintage,Yellow,Green,DarkGray,Yellow
+,group,Active Wells,Red,Yellow,Green,DarkGray
+,group,All Wells,Green,DarkGray,Yellow,Red
+,group,County1,DarkGray,Red,Red,Green
+,group,County2,Yellow,Green,DarkGray,Yellow
+,group,ESP Wells,Green,DarkGray,Yellow,Red
+,group,Horizontal Wells,Red,Yellow,Green,DarkGray
+,group,Pumping Unit Wells,DarkGray,Red,Red,Green
+,group,Vertical Wells,Yellow,Green,DarkGray,Yellow
+44592,well,Deatherage 23 2,Yellow,Yellow,Yellow,Yellow
+44593,well,Abraxas 30A 2,DarkGray,DarkGray,DarkGray,DarkGray
+44594,well,Stevie Ray E Unit 2LS,DarkGray,DarkGray,DarkGray,DarkGray
+44595,well,Richards 41A 1,Green,Green,Green,Green
+44596,well,Nance 19 6,Red,Red,Red,Red
+44597,well,Slaughter Bauer 832,DarkGray,DarkGray,DarkGray,DarkGray
+44598,well,Richards 47A 1,Yellow,Yellow,Yellow,Yellow
+44599,well,Self 3,DarkGray,DarkGray,DarkGray,DarkGray
+44600,well,Stephens 1,Green,Green,Green,Green
+44601,well,Slaughter 19D 1,Yellow,Yellow,Yellow,Yellow
+44602,well,Abraxas 28B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44604,well,Johnson C 1,Yellow,Yellow,Yellow,Yellow
+44605,well,Heald 4,Green,Green,Green,Green
+44608,well,Slaughter 87B 3,Red,Red,Red,Red
+44609,well,Holcomb 45A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44610,well,Rufus 4,Green,Green,Green,Green
+44612,well,Abraxas 27B 1,Red,Red,Red,Red
+44613,well,Slaughter 29E 3,Yellow,Yellow,Yellow,Yellow
+44614,well,Elma L Slaughter G 4,DarkGray,DarkGray,DarkGray,DarkGray
+44615,well,Slaughter 8A 1,Green,Green,Green,Green
+44616,well,Abraxas 32A 1,Yellow,Yellow,Yellow,Yellow
+44617,well,Oneil 4 2,DarkGray,DarkGray,DarkGray,DarkGray
+44618,well,Nance 19 5,DarkGray,DarkGray,DarkGray,DarkGray
+44619,well,Abraxas 28 2,Yellow,Yellow,Yellow,Yellow
+44620,well,Abraxas 32 5,Green,Green,Green,Green
+44622,well,Elma L Slaughter D 2,Yellow,Yellow,Yellow,Yellow
+44623,well,Davis 18 1,DarkGray,DarkGray,DarkGray,DarkGray
+44624,well,Abraxas 30A 3,Red,Red,Red,Red
+44625,well,Stone 70 1,Green,Green,Green,Green
+44626,well,Thomas 1542,DarkGray,DarkGray,DarkGray,DarkGray
+44627,well,Deatherage 2,DarkGray,DarkGray,DarkGray,DarkGray
+44628,well,Cook 21 2,Yellow,Yellow,Yellow,Yellow
+44629,well,Thomas A 1543,DarkGray,DarkGray,DarkGray,DarkGray
+44630,well,Slaughter 82B 1,Green,Green,Green,Green
+44633,well,Garner 7 3,DarkGray,DarkGray,DarkGray,DarkGray
+44635,well,Abraxas 31C 3,Green,Green,Green,Green
+44636,well,Abraxas 32 11,Red,Red,Red,Red
+44637,well,Stevie Ray E Allocation Unit 1LS,Yellow,Yellow,Yellow,Yellow
+44638,well,Holcomb 2,DarkGray,DarkGray,DarkGray,DarkGray
+44639,well,Gary Lamb 14A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44640,well,Butchee 21 7,Green,Green,Green,Green
+44642,well,Snell F E 1,DarkGray,DarkGray,DarkGray,DarkGray
+44643,well,Slaughter 19C 1,Yellow,Yellow,Yellow,Yellow
+44644,well,Titos 31-42 1WB,Red,Red,Red,Red
+44646,well,Butchee 21 3,Yellow,Yellow,Yellow,Yellow
+44647,well,Thirsty Goat W Unit 2LS,DarkGray,DarkGray,DarkGray,DarkGray
+44648,well,Slaughter 544,Red,Red,Red,Red
+44649,well,Moses Trust 69 5,Yellow,Yellow,Yellow,Yellow
+44650,well,Titos 31-42 2WB,Green,Green,Green,Green
+44652,well,Rufus 8,Yellow,Yellow,Yellow,Yellow
+44653,well,Cook 22 4,DarkGray,DarkGray,DarkGray,DarkGray
+44655,well,Slaughter 29B 2,Green,Green,Green,Green
+44656,well,Barron 82 1,Red,Red,Red,Red
+44657,well,Butchee 21 8,DarkGray,DarkGray,DarkGray,DarkGray
+44659,well,Davis 14 1,DarkGray,DarkGray,DarkGray,DarkGray
+44660,well,Cook 21 7,Green,Green,Green,Green
+44661,well,Moses Trust 69 4,Yellow,Yellow,Yellow,Yellow
+44662,well,Middleton 3,DarkGray,DarkGray,DarkGray,DarkGray
+44664,well,Hale 1444,Yellow,Yellow,Yellow,Yellow
+44665,well,Jumper 1,Green,Green,Green,Green
+44666,well,Abraxas 16 2,DarkGray,DarkGray,DarkGray,DarkGray
+44667,well,Cook 21 8,Yellow,Yellow,Yellow,Yellow
+44668,well,Thirsty Goat E Unit 1WA,Red,Red,Red,Red
+44669,well,Thirsty Goat W Unit 1LS,DarkGray,DarkGray,DarkGray,DarkGray
+44670,well,Thirsty Goat E Unit 3LS,Green,Green,Green,Green
+44673,well,Davison 41 1,Yellow,Yellow,Yellow,Yellow
+44674,well,Abraxas 16 1,DarkGray,DarkGray,DarkGray,DarkGray
+44675,well,Abraxas 28D 1,Green,Green,Green,Green
+44676,well,Bauer 2,Yellow,Yellow,Yellow,Yellow
+44677,well,Bauer 3,DarkGray,DarkGray,DarkGray,DarkGray
+44678,well,McCloskey 42 3,DarkGray,DarkGray,DarkGray,DarkGray
+44679,well,Slaughter 87A 1,Yellow,Yellow,Yellow,Yellow
+44680,well,Abraxas 32B 8,Green,Green,Green,Green
+44681,well,Schneider A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44682,well,Abraxas 31C 2,Yellow,Yellow,Yellow,Yellow
+44684,well,Williams 6 2,Red,Red,Red,Red
+44685,well,Hale 1524,Green,Green,Green,Green
+44686,well,Slaughter -C- 1,DarkGray,DarkGray,DarkGray,DarkGray
+44687,well,Butchee 21 6,DarkGray,DarkGray,DarkGray,DarkGray
+44688,well,Foster 41 1,Yellow,Yellow,Yellow,Yellow
+44690,well,Beckham 1,Green,Green,Green,Green
+44691,well,Hale 1441,Yellow,Yellow,Yellow,Yellow
+44692,well,Deatherage 18 1,Red,Red,Red,Red
+44693,well,Slaughter 87A 2,DarkGray,DarkGray,DarkGray,DarkGray
+44694,well,Stevie Ray E Unit 1WA,Yellow,Yellow,Yellow,Yellow
+44695,well,Abraxas 30 3,Green,Green,Green,Green
+44696,well,Oneil 4 3,Red,Red,Red,Red
+44697,well,Butchee 21 1,Yellow,Yellow,Yellow,Yellow
+44698,well,Slaughter 87B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44699,well,Deatherage 23 1,DarkGray,DarkGray,DarkGray,DarkGray
+44700,well,Lucy 1,Green,Green,Green,Green
+44701,well,Slaughter 75A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44702,well,Middleton 2,DarkGray,DarkGray,DarkGray,DarkGray
+44703,well,Richards 44 3,Yellow,Yellow,Yellow,Yellow
+44705,well,Cook 22 8,Green,Green,Green,Green
+44706,well,Nichols 24 1,Yellow,Yellow,Yellow,Yellow
+44707,well,Richards 44 4,DarkGray,DarkGray,DarkGray,DarkGray
+44708,well,Slaughter 533,Red,Red,Red,Red
+44709,well,Abraxas 27 1,Yellow,Yellow,Yellow,Yellow
+44711,well,Slaughter -B- 4,DarkGray,DarkGray,DarkGray,DarkGray
+44712,well,Abraxas 27 4,Yellow,Yellow,Yellow,Yellow
+44714,well,Abraxas 32 12,DarkGray,DarkGray,DarkGray,DarkGray
+44715,well,Elma L Slaughter G 1,Green,Green,Green,Green
+44716,well,Elma L Slaughter 1,Red,Red,Red,Red
+44717,well,Titos 31-42 2WA,DarkGray,DarkGray,DarkGray,DarkGray
+44718,well,Hale 1521,Yellow,Yellow,Yellow,Yellow
+44719,well,Slaughter 514,DarkGray,DarkGray,DarkGray,DarkGray
+44720,well,Williams 6 1,Green,Green,Green,Green
+44721,well,Baldwin 7 2,Yellow,Yellow,Yellow,Yellow
+44722,well,Lady Bird 22-14 1WB,DarkGray,DarkGray,DarkGray,DarkGray
+44723,well,Slaughter 29B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44724,well,Butchee 21 2,Yellow,Yellow,Yellow,Yellow
+44728,well,Abraxas 32B 10,Red,Red,Red,Red
+44729,well,Thirsty Goat E Unit 1LS,DarkGray,DarkGray,DarkGray,DarkGray
+44731,well,Abraxas 31B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44732,well,Slaughter B-3 1,Red,Red,Red,Red
+44734,well,Garner 7 1,DarkGray,DarkGray,DarkGray,DarkGray
+44735,well,Cook 21 3,Green,Green,Green,Green
+44736,well,Baldwin 7 1,Yellow,Yellow,Yellow,Yellow
+44737,well,Abraxas 32C 1,DarkGray,DarkGray,DarkGray,DarkGray
+44738,well,Snell 43A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44739,well,Yates 82 4,Yellow,Yellow,Yellow,Yellow
+44740,well,Abraxas 31 1,Green,Green,Green,Green
+44741,well,Deatherage 18 3,DarkGray,DarkGray,DarkGray,DarkGray
+44742,well,McCloskey 42 1,Yellow,Yellow,Yellow,Yellow
+44746,well,Grace 1,DarkGray,DarkGray,DarkGray,DarkGray
+44747,well,Richards 44B Pooled Unit 1,DarkGray,DarkGray,DarkGray,DarkGray
+44748,well,Glasscock 7 2,Yellow,Yellow,Yellow,Yellow
+44749,well,Rawlings 43 2,DarkGray,DarkGray,DarkGray,DarkGray
+44750,well,Thirsty Goat E Unit 2WA,Green,Green,Green,Green
+44752,well,Slaughter 29D 1,Red,Red,Red,Red
+44753,well,Abraxas 28D 2,DarkGray,DarkGray,DarkGray,DarkGray
+44754,well,McCloskey 42A 1,Yellow,Yellow,Yellow,Yellow
+44755,well,Richards 41 1,Green,Green,Green,Green
+44756,well,Titos 31-42 1LS,Red,Red,Red,Red
+44757,well,Thomas A 1544,Yellow,Yellow,Yellow,Yellow
+44759,well,Bauer 5,DarkGray,DarkGray,DarkGray,DarkGray
+44760,well,Holcomb 45 3,Green,Green,Green,Green
+44762,well,Abraxas 28 1,DarkGray,DarkGray,DarkGray,DarkGray
+44763,well,Slaughter 17 2,Yellow,Yellow,Yellow,Yellow
+44764,well,Titos 31-42 3WA,Red,Red,Red,Red
+44766,well,Abraxas 28E 1,Yellow,Yellow,Yellow,Yellow
+44767,well,Nance 19 4,DarkGray,DarkGray,DarkGray,DarkGray
+44768,well,Abraxas 27A 2,Red,Red,Red,Red
+44769,well,Abraxas 30A 1,Yellow,Yellow,Yellow,Yellow
+44771,well,McCloskey 42B 2,DarkGray,DarkGray,DarkGray,DarkGray
+44772,well,Abraxas 30B 1,Yellow,Yellow,Yellow,Yellow
+44773,well,Butchee 22B 4,DarkGray,DarkGray,DarkGray,DarkGray
+44774,well,Slaughter 29A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44775,well,Rufus 2,Green,Green,Green,Green
+44777,well,Lady Bird 22-14 1WA,DarkGray,DarkGray,DarkGray,DarkGray
+44778,well,Schneider A 2,Yellow,Yellow,Yellow,Yellow
+44779,well,Farms 19 3,DarkGray,DarkGray,DarkGray,DarkGray
+44780,well,Vogler 4224,Green,Green,Green,Green
+44781,well,Cook 22 1,Yellow,Yellow,Yellow,Yellow
+44782,well,Slaughter 19B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44783,well,Oneil 4 1,DarkGray,DarkGray,DarkGray,DarkGray
+44786,well,Abraxas 27 2,DarkGray,DarkGray,DarkGray,DarkGray
+44787,well,Slaughter 74E 1,Yellow,Yellow,Yellow,Yellow
+44788,well,Rufus 6,Red,Red,Red,Red
+44789,well,Cook 22 5,DarkGray,DarkGray,DarkGray,DarkGray
+44790,well,Lady Bird 22-14 1LS,Green,Green,Green,Green
+44791,well,Nichols 24 3,DarkGray,DarkGray,DarkGray,DarkGray
+44793,well,Moses Trust 69 2,Yellow,Yellow,Yellow,Yellow
+44794,well,Slaughter 74F 1,DarkGray,DarkGray,DarkGray,DarkGray
+44795,well,Slaughter 29C 1,Green,Green,Green,Green
+44797,well,Abraxas 31B 3,DarkGray,DarkGray,DarkGray,DarkGray
+44798,well,Cook 22 3,DarkGray,DarkGray,DarkGray,DarkGray
+44799,well,Titos 31-42 2LS,Yellow,Yellow,Yellow,Yellow
+44800,well,Holcomb 45 2,Green,Green,Green,Green
+44801,well,Cook 21 4,DarkGray,DarkGray,DarkGray,DarkGray
+44802,well,Butchee 22A 1,Yellow,Yellow,Yellow,Yellow
+44803,well,Abraxas 20 1,DarkGray,DarkGray,DarkGray,DarkGray
+44804,well,Stevie Ray E Unit 3LS,Red,Red,Red,Red
+44805,well,Hale 42 1,Green,Green,Green,Green
+44806,well,Slaughter 75D 1,DarkGray,DarkGray,DarkGray,DarkGray
+44807,well,Abraxas 20 2,DarkGray,DarkGray,DarkGray,DarkGray
+44808,well,Nance 19 2,Yellow,Yellow,Yellow,Yellow
+44809,well,Lemon Farms Unit 14 1,DarkGray,DarkGray,DarkGray,DarkGray
+44811,well,McCloskey 42 2,Yellow,Yellow,Yellow,Yellow
+44813,well,Slaughter 82A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44814,well,Rufus 3,Yellow,Yellow,Yellow,Yellow
+44815,well,Butchee 21 5,Green,Green,Green,Green
+44816,well,Cook 22 6,Red,Red,Red,Red
+44818,well,Rufus 9,DarkGray,DarkGray,DarkGray,DarkGray
+44819,well,Nugget 1,DarkGray,DarkGray,DarkGray,DarkGray
+44820,well,Slaughter 87B 4R,Green,Green,Green,Green
+44821,well,Thirsty Goat E Unit 2LS,DarkGray,DarkGray,DarkGray,DarkGray
+44822,well,Bauer 4,DarkGray,DarkGray,DarkGray,DarkGray
+44823,well,Stone 69 1,Yellow,Yellow,Yellow,Yellow
+44824,well,Hale 1512,Red,Red,Red,Red
+44825,well,Slaughter 29E 1,Green,Green,Green,Green
+44826,well,Snell 2,Yellow,Yellow,Yellow,Yellow
+44827,well,Richards 44A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44828,well,Rawlings 43 1,Red,Red,Red,Red
+44829,well,Elma L Slaughter E 2,Yellow,Yellow,Yellow,Yellow
+44830,well,Abraxas 31A 3,Green,Green,Green,Green
+44831,well,Titos 31-42 1WA,DarkGray,DarkGray,DarkGray,DarkGray
+44832,well,Vogler 4214,Yellow,Yellow,Yellow,Yellow
+44833,well,Cook 21 5,DarkGray,DarkGray,DarkGray,DarkGray
+44834,well,Cook 21 1,DarkGray,DarkGray,DarkGray,DarkGray
+44835,well,Yates 82 2,Green,Green,Green,Green
+44836,well,Thirsty Goat W Unit 1WA,Red,Red,Red,Red
+44837,well,Abraxas 31A 2,DarkGray,DarkGray,DarkGray,DarkGray
+44839,well,Nance 19 1,DarkGray,DarkGray,DarkGray,DarkGray
+44840,well,Cook 21 6,Green,Green,Green,Green
+44841,well,Hale 1443,Yellow,Yellow,Yellow,Yellow
+44842,well,Slaughter 29D 2,DarkGray,DarkGray,DarkGray,DarkGray
+44843,well,Abraxas 30B 4,DarkGray,DarkGray,DarkGray,DarkGray
+44844,well,Garner 7 2,Yellow,Yellow,Yellow,Yellow
+44845,well,Bauer 1,Green,Green,Green,Green
+44846,well,Slaughter 19D 2,DarkGray,DarkGray,DarkGray,DarkGray
+44847,well,Slaughter 17 3,Yellow,Yellow,Yellow,Yellow
+44848,well,Abraxas 30 1,Red,Red,Red,Red
+44851,well,Hale 1523,DarkGray,DarkGray,DarkGray,DarkGray
+44852,well,Thomas 1541,Red,Red,Red,Red
+44853,well,Oneil 4 4,Yellow,Yellow,Yellow,Yellow
+44854,well,Slaughter 87B 2,DarkGray,DarkGray,DarkGray,DarkGray
+44855,well,Rufus 7,Green,Green,Green,Green
+44857,well,Nance 19 3R,DarkGray,DarkGray,DarkGray,DarkGray
+44858,well,Abraxas 28A 1,DarkGray,DarkGray,DarkGray,DarkGray
+44859,well,Moses Trust 69 6,Yellow,Yellow,Yellow,Yellow
+44860,well,Slaughter 8C 1,Green,Green,Green,Green
+44861,well,Deatherage 18 2,DarkGray,DarkGray,DarkGray,DarkGray
+44862,well,Abraxas 32 6,Yellow,Yellow,Yellow,Yellow
+44863,well,McCloskey 42B 1,DarkGray,DarkGray,DarkGray,DarkGray
+44864,well,Butchee 21 4,Red,Red,Red,Red
