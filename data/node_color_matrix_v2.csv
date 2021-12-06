@@ -1,16 +1,9 @@
 ﻿well_id,well_or_group,name,dataset_1_177,dataset_1_14,dataset_1_13,dataset_1_12
-,group,2018 Vintage,DarkGray,Red,Red,Green
-,group,2019 Vintage,DarkGray,Red,Red,Green
-,group,2020 Vintage,Green,DarkGray,Yellow,Red
-,group,2021 Vintage,Yellow,Green,DarkGray,Yellow
-,group,Active Wells,Red,Yellow,Green,DarkGray
-,group,All Wells,Green,DarkGray,Yellow,Red
-,group,County1,DarkGray,Red,Red,Green
-,group,County2,Yellow,Green,DarkGray,Yellow
-,group,ESP Wells,Green,DarkGray,Yellow,Red
-,group,Horizontal Wells,Red,Yellow,Green,DarkGray
-,group,Pumping Unit Wells,DarkGray,Red,Red,Green
-,group,Vertical Wells,Yellow,Green,DarkGray,Yellow
+,group,All Wells,DarkGray,Red,Red,Green
+,group,ESP Wells,DarkGray,Red,Red,Green
+,group,Horizontal Wells,Green,DarkGray,Yellow,Red
+,group,Rod Pump Wells,Yellow,Green,DarkGray,Yellow
+,group,Vertical Wells,Red,Yellow,Green,DarkGray
 44592,well,Deatherage 23 2,Yellow,Yellow,Yellow,Yellow
 44593,well,Abraxas 30A 2,DarkGray,DarkGray,DarkGray,DarkGray
 44594,well,Stevie Ray E Unit 2LS,DarkGray,DarkGray,DarkGray,DarkGray
