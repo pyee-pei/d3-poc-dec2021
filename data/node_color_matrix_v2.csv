@@ -1,9 +1,9 @@
 ﻿well_id,well_or_group,name,dataset_1_177,dataset_1_14,dataset_1_13,dataset_1_12
-,group,All Wells,DarkGray,Red,Red,Green
-,group,ESP Wells,DarkGray,Red,Red,Green
-,group,Horizontal Wells,Green,DarkGray,Yellow,Red
-,group,Pumping Unit Wells,Yellow,Green,DarkGray,Yellow
-,group,Vertical Wells,Red,Yellow,Green,DarkGray
+All Wells,group,All Wells,DarkGray,Red,Red,Green
+ESP Wells,group,ESP Wells,DarkGray,Red,Red,Green
+Horizontal Wells,group,Horizontal Wells,Green,DarkGray,Yellow,Red
+Pumping Unit Wells,group,Pumping Unit Wells,Yellow,Green,DarkGray,Yellow
+Vertical Wells,group,Vertical Wells,Red,Yellow,Green,DarkGray
 44592,well,Deatherage 23 2,Yellow,Yellow,Yellow,Yellow
 44593,well,Abraxas 30A 2,DarkGray,DarkGray,DarkGray,DarkGray
 44594,well,Stevie Ray E Unit 2LS,DarkGray,DarkGray,DarkGray,DarkGray

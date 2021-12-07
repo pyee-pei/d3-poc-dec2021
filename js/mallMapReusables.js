@@ -94,74 +94,63 @@ function zoomToBounds(expandable,transitionTime) {
     updateFonts(false);
 
     //transform the svg
-    svg
-        .interrupt()
-        .transition()
-        .duration(transitionTime)
-        .attr("transform", transform_str)
-        .on("end", function () {
-            //if expandable carry on
-            if (expandable === true && midTransition === false) {
-                d3.select(".d3_tooltip").style("visibility", "hidden");
-                midTransition = true; //so any other clicks are disabled while this is going on
-                d3.selectAll(".pathLabel")
-                    .attr("opacity", 1)
-                    .interrupt()
-                    .transition()
-                    .duration(500)
-                    .attr("opacity", 0) //hide label
-                    .transition()
-                    .duration(0) //then change position
-                    .attr("transform", d => "rotate(" + (d.foldoutTransformX - 90) + ") translate("
-                        + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
-                    .transition()
-                    .delay(500)
-                    .duration(300) //and show label
-                    .attr("opacity", 1);
+    if(expandable !== true){
+        svg.interrupt()
+            .transition()
+            .duration(transitionTime)
+            .attr("transform", transform_str)
+            .on("end", function () {
+                updateFonts(false);
+            })
+    } else if (midTransition === false){
+        d3.select(".d3_tooltip").style("visibility", "hidden");
+        midTransition = true; //so any other clicks are disabled while this is going on
+        d3.selectAll(".pathLabel")
+            .attr("opacity", 0)
+            .transition()
+            .duration(0) //then change position
+            .attr("transform", d => "rotate(" + (d.foldoutTransformX - 90) + ") translate("
+                + d.foldoutHeight + ",0) rotate(" + (d.foldoutTransformX < 180 ? 0 : 180) + ")")
+            .transition()
+            .delay(500)
+            .duration(300) //and show label
+            .attr("opacity", 1);
 
-                //remove all texture paths
-                d3.selectAll(".sunburstTexturePath")
-                    .transition()
-                    .duration(500)
-                    .attr("opacity", 0)
-                    .transition()
-                    .duration(0) //add new foldoutpath
-                    .attr("d", d => d.foldoutPath)
-                    .transition()
-                    .delay(500)
-                    .duration(500)
-                    .attr("opacity", 1);
+        //remove all texture paths
+        d3.selectAll(".sunburstTexturePath")
+            .attr("opacity", 0)
+            .transition()
+            .duration(0) //add new foldoutpath
+            .attr("d", d => d.foldoutPath)
+            .transition()
+            .delay(500)
+            .duration(500)
+            .attr("opacity", 1);
 
-                d3.selectAll(".sunburstPath")
-                    .attr("opacity", 1)
-                    .interrupt()
-                    .transition()
-                    .duration(500) //hide paths
-                    .attr("opacity", 0)
-                    .transition()
-                    .duration(0) //add new foldoutpath
-                    .attr("d", d => d.foldoutPath)
-                    .on("end", function () {
-                        //get new scale and rescale
-                        var [zoomedScale, zoomedX, zoomedY] = getValues();
-                        svg.transition()
-                            .duration(0)
-                            .attr("transform", d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
-                        //PROBLEM IS THAT THE zoomScale is for the foldoutPath - not for every
-                        //mallMap.currentScale = zoomedScale;
-                        updateFonts(true);
-                    })
-                    .transition()
-                    .delay(500)
-                    .duration(500)
-                    .attr("opacity", 1)
-                    .on("end", function () {
-                        midTransition = false;
-                    });
-            } else {
-                updateFonts(false,);
-            }
-        })
+        d3.selectAll(".sunburstPath")
+            .attr("opacity", 0)
+            .transition()
+            .duration(0) //add new foldoutpath
+            .attr("d", d => d.foldoutPath)
+            .on("end", function () {
+                //get new scale and rescale
+                var [zoomedScale, zoomedX, zoomedY] = getValues();
+                svg.transition()
+                    .duration(0)
+                    .attr("transform", d3.zoomIdentity.translate(zoomedX, zoomedY).scale(zoomedScale));
+                //PROBLEM IS THAT THE zoomScale is for the foldoutPath - not for every
+                //mallMap.currentScale = zoomedScale;
+                updateFonts(true);
+            })
+            .transition()
+            .delay(500)
+            .duration(500)
+            .attr("opacity", 1)
+            .on("end", function () {
+                midTransition = false;
+            });
+    }
+
 
     function updateFonts(includeZero) {
         var fontSize = mallMap.fontSize / (includeZero === true ? 1 : mallMap.currentScale);
@@ -186,6 +175,9 @@ function zoomToBounds(expandable,transitionTime) {
 }
     function drawSunburst(sunburstData,allData){
 
+        if(sunburstData.descendants !== undefined){
+            sunburstData = sunburstData.descendants();
+        }
         //calculate depthWidth (used for label visibility)
         var minDepth = d3.min(sunburstData, d => d.depth);
         var maxDepth = d3.max(sunburstData, d => d.depth);
@@ -206,12 +198,12 @@ function zoomToBounds(expandable,transitionTime) {
 
         if(allData === false){
             //if not all data, select relevant paths on mini mall map
-            sunburstData.descendants().forEach(d => d3.selectAll("#miniMap" + d.data.id).attr("fill",getPathFill));
+            sunburstData.forEach(d => d3.selectAll("#miniMap" + d.data.id).attr("fill",getPathFill));
         }
 
         //path group
         const pathGroup = svg.selectAll('.pathGroup' + myClass)
-            .data(sunburstData, d => allData + "_" + minDepth + "_" + maxDepth)
+            .data(sunburstData)
             .join(function(group){
                 var enter = group.append("g").attr("class","pathGroup" + myClass);
                 enter.append("path").attr("class","sunburstPath");
@@ -252,20 +244,26 @@ function zoomToBounds(expandable,transitionTime) {
             })
             .on("click",function(event,d){
                 if(d.depth > 0 && midTransition === false){
-                    //get breadcrumb data and redraw breadcrumb
-                    const breadcrumbData = getBreadcrumbs(d);
-                    drawBreadcrumbs(breadcrumbData);
-                    //if expandable, add foldoutdata
-                    if(d.data.expandable !== undefined){
-                        addFoldoutData(d);
-                    }
-                    //redraw sunburst and zoom.
-                    drawSunburst(d,false);
-                    zoomToBounds(d.data.expandable === undefined ? false : true,1000);
-                    if(d.data.name === "30 Day"){
-                        mallMap.stackedBarChart.changeFilter("all");
-                    } else if (d.data.relative !== undefined){
-                        mallMap.stackedBarChart.changeFilter(d.data.name.toLowerCase());
+                    if(d.data.well_id !== undefined){
+                        mallMap.selectedColor = d.data.well_id;
+                        d3.select("#radio_" + d.data.well_id).node().checked = true;
+                        initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                    } else {
+                        //get breadcrumb data and redraw breadcrumb
+                        const breadcrumbData = getBreadcrumbs(d);
+                        drawBreadcrumbs(breadcrumbData);
+                        //if expandable, add foldoutdata
+                        if(d.data.expandable !== undefined){
+                            addFoldoutData(d);
+                        }
+                        //redraw sunburst and zoom.
+                        drawSunburst(d,false);
+                        zoomToBounds(d.data.expandable === undefined ? false : true,1000);
+                        if(d.data.name === "30 Day"){
+                            mallMap.stackedBarChart.changeFilter("all");
+                        } else if (d.data.relative !== undefined){
+                            mallMap.stackedBarChart.changeFilter(d.data.name.toLowerCase());
+                        }
                     }
                 }
             });
@@ -361,6 +359,9 @@ function zoomToBounds(expandable,transitionTime) {
                         //or reset to default breadcrumb
                         allData = true;
                         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
+                    }
+                    if(myRoot.data.expandable !== undefined){
+                        addFoldoutData(myRoot);
                     }
                     //draw chart and zoom.
                     drawSunburst(myRoot,allData);

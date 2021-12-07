@@ -8,5 +8,7 @@ var mallMap = {
     "extraChartData":{},
     "relativeNodes":{},
     "sunburstChart":"",
-    "stackedBarChart":""
+    "stackedBarChart":"",
+    "mainData":"",
+    "extraData":""
 };

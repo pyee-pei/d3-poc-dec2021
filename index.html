@@ -13,7 +13,7 @@
 <body>
 <div id="header_div">
     <div id="functional_div">
-        <input type="radio" class="datasetChoice" name="datasetChoice" id="functional" value="" checked><label for="functional" style="font-weight: bold;">FUNCTIONAL</label>
+        <input type="radio" class="datasetChoice" name="datasetChoice" id="functional" value="functional" checked><label for="functional" style="font-weight: bold;">FUNCTIONAL</label>
     </div>
     <div id="group_div">
         <span style="font-weight: bold;">GROUPS</span><br><br>
@@ -85,10 +85,12 @@
         var topTotal = d3.sum(top25, d => d.value);
         top25.forEach(function(d,i){
             if(groupedFilteredData[i] === undefined){
+                d.well_id = null;
                 d.name = "";
                 d.relativeValue = 0;
                 d.difference = 0;
             } else {
+                d.well_id = groupedFilteredData[i][0];
                 d.name = wellNames[groupedFilteredData[i][0]];
                 d.relativeValue = groupedFilteredData[i][1]/(filterTotal/topTotal);
                 d.difference = groupedFilteredData[i][1];
@@ -102,10 +104,12 @@
         var bottomTotal = d3.sum(bottom25, d => d.value);
         bottom25.forEach(function(d,i){
             if(groupedFilteredData[i] === undefined){
+                d.well_id = null;
                 d.name = "";
                 d.relativeValue = 0;
                 d.difference = 0;
             } else {
+                d.well_id = groupedFilteredData[i][0];
                 d.name = wellNames[groupedFilteredData[i][0]];
                 d.relativeValue = groupedFilteredData[i][1]/(filterTotal/bottomTotal);
                 d.difference = groupedFilteredData[i][1];
@@ -188,7 +192,7 @@
                 });
 
             wellGroup.select(".wellInput")
-                .attr("id","well")
+                .attr("id",d => "radio_" + d)
                 .attr("y",(d,i) => (i*12))
                 .attr("type","radio")
                 .style("height","10px")
@@ -204,7 +208,9 @@
         }
 
 
-       // initialiseDashboard(all_datasets[0],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+        mallMap.mainData = all_datasets[0];
+        mallMap.extraData = extraChartData;
+        initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
@@ -212,7 +218,7 @@
                     populateWells(wellsByGroup[this.value]);
                 }
                 mallMap.selectedColor = this.value === "functional" ? "default" : this.value;
-              //  initialiseDashboard(all_datasets[0],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
             });
 
         function convertDate(myDate){
