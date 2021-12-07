@@ -12,8 +12,16 @@
 </head>
 <body>
 <div id="header_div">
-    <input type="radio" class="datasetChoice" name="datasetChoice" id="0" value="1" checked><label for="0">Dataset 1</label>
-    |  Select Individual Well Ids to see Status: <select class="wellColours"></select>
+    <div id="functional_div">
+        <input type="radio" class="datasetChoice" name="datasetChoice" id="functional" value="" checked><label for="functional" style="font-weight: bold;">FUNCTIONAL</label>
+    </div>
+    <div id="group_div">
+        <span style="font-weight: bold;">GROUPS</span><br><br>
+    </div>
+    <div id="well_div">
+        <span style="font-weight: bold;">WELLS</span><br><br>
+    </div>
+
 </div>
 <div id="breadcrumb_div"></div>
 <div id="chart_div"></div>
@@ -28,10 +36,10 @@
 <script>
 
     var promises = [
-        d3.json("data/dataset_1.json"),
-        d3.json("data/dataset_2.json"),
-        d3.csv("data/dev_production_data.csv"),
-        d3.csv("data/node_color_matrix.csv")
+        d3.json("data/mallMap2.json"),
+        d3.csv("data/dev_production_data_v2.csv"),
+        d3.csv("data/node_color_matrix_v2.csv"),
+        d3.csv("data/well_groups.csv")
     ]
 
     Promise.all(promises).then(ready)
@@ -41,7 +49,8 @@
         var extraChartData = [],
         wellNames = {};
 
-        all_datasets[2].forEach(function(d){
+        //format extra chart data (only 30 day at moment)
+        all_datasets[1].forEach(function(d){
             if(d.current_status === "ACTIVE"){
                 wellNames[d.well_id] = d.well_name;
                 extraChartData.push({
@@ -52,7 +61,8 @@
                     "ipc_revenue":+d.ipc_revenue_minus_royalty,
                     "op_code":d.op_code,
                     "route_name":d.route_name,
-                    "position_flag":d["30_day_revenue_ipc_delta_flag"]
+                    "position_flag":d["30_day_revenue_ipc_delta_flag"],
+                    "lat_long":[+d.latitude_surface,+d.longitude_surface]
 
                 })
             }
@@ -60,31 +70,9 @@
         extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
         extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
 
-        var datasetChoice = "1";
-
-        //add an id to each node (temp hopefully)
-        all_datasets.forEach(function(d,i){
-            if(i < 2){
-                var myID = 0;
-                d.id = "dataset_" + i + "_" + myID;
-                myID += 1;
-                d.children = addId(d.children,i);
-
-                function addId(myChildren,myIndex){
-                    myChildren.forEach(function(c){
-                        c.id = "dataset_" + myIndex + "_" + myID;
-                        myID += 1
-                        if(c.children !== undefined){
-                            addId(c.children,myIndex);
-                        }
-                    })
-                    return myChildren;
-                }
-            }
-        })
 
         //big cheat to update wells for 30 day IPC Actual (dev_production_data.csv)
-        var thirtyDay = all_datasets[1].children[2].children[1].children[0].children[0].children[3];
+        var thirtyDay = all_datasets[0].children[2].children[1].children[0].children[0].children[3];
         thirtyDay.children[0].expandable = true;
         thirtyDay.children[2].expandable = true;
         thirtyDay.children[0].relative = true;
@@ -124,58 +112,107 @@
             }
         })
 
-        var colourMatrix = all_datasets[3], matrixWellIds = new Set();
-        matrixWellIds.add("Functional View");
+        var colourMatrix = all_datasets[2], matrixWellIds = new Set(), groupNames = new Set();
 
-        //add an id to each node (temp hopefully)
-        all_datasets.forEach(function(d,i){
-            if(i < 2){
-                var myID = 0;
-                d.id = "dataset_" + i + "_" + myID;
-                myID += 1;
-                d.children = addId(d.children,i);
 
-                function addId(myChildren,myIndex){
-                    myChildren.forEach(function(c){
-                        c.id = "dataset_" + myIndex + "_" + myID;
-                        var matrixColumn = colourMatrix.columns.indexOf(c.id);
-                        colourMatrix.forEach(function(m){
-                            matrixWellIds.add(m.well_id);
-                            if(matrixColumn > -1) {
-                                c.colors[m.well_id] = m[colourMatrix.columns[matrixColumn]];
-                            } else {
-                                c.colors[m.well_id] = "#F0F0F0";
-                            }
-                        })
-                        myID += 1
-                        if(c.children !== undefined){
-                            addId(c.children,myIndex);
-                        }
-                    })
-                    return myChildren;
+        all_datasets[0].children = addColour(all_datasets[0].children);
+
+        function addColour(myChildren){
+            myChildren.forEach(function(c){
+                var matrixColumn = colourMatrix.columns.indexOf(c.id);
+                colourMatrix.forEach(function(m){
+                    if(m.well_or_group === "group"){
+                        groupNames.add(m.name);
+                    } else {
+                        matrixWellIds.add(m.well_id);
+                    }
+                    if(matrixColumn > -1) {
+                        c.colors[m.well_id] = m[colourMatrix.columns[matrixColumn]];
+                    } else {
+                        c.colors[m.well_id] = "#F0F0F0";
+                    }
+                })
+                if(c.children !== undefined){
+                    addColour(c.children);
                 }
-            }
-        })
-        matrixWellIds = Array.from(matrixWellIds.values());
-
-        d3.select(".wellColours")
-            .on("change",function(){
-                mallMap.selectedColor = this.value === "Functional View" ? "default" : this.value;
-                initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
             })
-            .selectAll("option")
-            .data(matrixWellIds)
-            .join("option")
-            .attr("id",d => d)
-            .attr("value", d => d)
-            .text(d => d);
+            return myChildren;
+        }
+        matrixWellIds = Array.from(matrixWellIds.values());
+        groupNames = Array.from(groupNames.values());
 
-        initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+        var wellsByGroup = {};
+        groupNames.forEach(function(d){
+            var filteredData = all_datasets[3].filter(f => f.group_name === d);
+            var myIds = [];
+            filteredData.forEach(f => myIds.push(f.well_id));
+            wellsByGroup[d] = myIds;
+        })
+
+        var divGroup = d3.select("#group_div").selectAll('.groupDivInputs')
+            .data(groupNames)
+            .join(function(group){
+                var enter = group.append("g").attr("class","groupDivInputs");
+                enter.append("input").attr("class","groupInput");
+                enter.append("span").attr("class","groupInputLabel");
+                enter.append("br");
+                return enter;
+            });
+
+        divGroup.select(".groupInput")
+            .attr("id","group")
+            .attr("y",(d,i) => (i*12))
+            .attr("type","radio")
+            .attr("class","datasetChoice")
+            .attr("name","datasetChoice")
+            .attr("value", d => d);
+
+        divGroup.select(".groupInputLabel")
+            .style("font-size","12px")
+            .attr("x",30)
+            .attr("y",(d,i) => (i*12))
+            .html(d => d);
+
+        populateWells(matrixWellIds);
+
+        function populateWells(myDataset){
+            myDataset = myDataset.sort((a,b) => d3.ascending(wellNames[a],wellNames[b]))
+            var wellGroup = d3.select("#well_div").selectAll('.wellDivInputs')
+                .data(myDataset)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","wellDivInputs");
+                    enter.append("input").attr("class","wellInput");
+                    enter.append("span").attr("class","wellInputLabel");
+                    enter.append("br");
+                    return enter;
+                });
+
+            wellGroup.select(".wellInput")
+                .attr("id","well")
+                .attr("y",(d,i) => (i*12))
+                .attr("type","radio")
+                .style("height","10px")
+                .attr("class","datasetChoice")
+                .attr("name","datasetChoice")
+                .attr("value", d => d);
+
+            wellGroup.select(".wellInputLabel")
+                .style("font-size","10px")
+                .attr("x",30)
+                .attr("y",(d,i) => (i*12))
+                .html(d => wellNames[d].substr(0,30));
+        }
+
+
+       // initialiseDashboard(all_datasets[0],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
-                datasetChoice = this.value;
-                initialiseDashboard(all_datasets[datasetChoice],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                if(this.id === "group"){
+                    populateWells(wellsByGroup[this.value]);
+                }
+                mallMap.selectedColor = this.value === "functional" ? "default" : this.value;
+              //  initialiseDashboard(all_datasets[0],extraChartData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
             });
 
         function convertDate(myDate){
@@ -189,6 +226,29 @@
     //chart now loads with this stripped data.
 
     function stripData1 (myDataset){
+
+        //old code - adding id
+        //add an id to each node (temp hopefully)
+        all_datasets.forEach(function(d,i){
+            if(i < 2){
+                var myID = 0;
+                d.id = "dataset_" + i + "_" + myID;
+                myID += 1;
+                d.children = addId(d.children,i);
+
+                function addId(myChildren,myIndex){
+                    myChildren.forEach(function(c){
+                        c.id = "dataset_" + myIndex + "_" + myID;
+                        myID += 1
+                        if(c.children !== undefined){
+                            addId(c.children,myIndex);
+                        }
+                    })
+                    return myChildren;
+                }
+            }
+        })
+
         var newData = {};
         var fieldNames = ["name","value"];
 

@@ -1,6 +1,5 @@
 body{
   font-family: Roboto;
-  font-weight: 500;
   font-size: 14px;
   margin:0;
   padding: 0;
@@ -9,25 +8,58 @@ body{
 }
 
 #header_div {
-  width: 100vw;
-  height:20px;
+  width: 12vw;
+  height:calc(100vh - 120px);
   text-align: center;
-  background-color: #F0F0F0;
+  background-color: #A0A0A0;
   float:left;
 }
 
+#functional_div{
+  float: left;
+  border: white 3px solid;
+  width: calc(12vw - 10px);
+  height:20px;
+  padding-left: 4px;
+  background-color: #F0F0F0;
+  text-align: left;
+}
+
+#group_div{
+  float: left;
+  text-align: left;
+  padding-top: 4px;
+  padding-left: 4px;
+  background-color: #D0D0D0;
+  width: calc(12vw - 10px);
+  height: 140px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: white 3px solid;
+}
+
+#well_div{
+  float: left;
+  text-align: left;
+  padding-top: 4px;
+  padding-left: 4px;
+  background-color: #D0D0D0;
+  width: calc(12vw - 10px);
+  height: calc(100vh - 306px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: white 3px solid;
+}
 #breadcrumb_div {
-  width: 100vw;
+  width: 88vw;
   height:30px;
   float:left;
 }
 
 #chart_div, #extra_chart_div {
-  width: 50vw;
+  width: 44vw;
   height:calc(100vh - 170px);
   float:left;
-  min-width: 500px;
-  min-height: 500px;
 }
 
 #footer_div {
