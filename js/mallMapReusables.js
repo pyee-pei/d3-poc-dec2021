@@ -1,3 +1,10 @@
+function measureWidth(my_text,fontSize){
+    //from https://observablehq.com/@mbostock/fit-text-to-circle
+    const context = document.createElement("canvas").getContext("2d");
+
+    return fontSize === undefined ? context.measureText(my_text).width : context.measureText(my_text).width  * (fontSize/14);
+}
+
 function mallMapChart() {
 
     var width=0,
@@ -11,7 +18,8 @@ function mallMapChart() {
         translateStr = "",
         depthWidth = 0,
         arc = "",
-        root = "";
+        root = "",
+        currentBreadcrumbData = [{"depth":0,"label":"Home","fill":"white"}];
 
     function my(mySvg) {
 
@@ -35,8 +43,8 @@ function mallMapChart() {
         const myHierarchy = getHierarchy(myData);
         root = getPartition(myHierarchy);
         //draw breadcrumbs,chart and then zoomtobounds
-        drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}])
-        drawSunburst(root.descendants(),true);
+        drawBreadcrumbs(currentBreadcrumbData)
+        drawSunburst(root,true);
         zoomToBounds(false,1000);
 
         //cheat for poc demo
@@ -56,11 +64,6 @@ function mallMapChart() {
         return d3.partition().size([2 * Math.PI, radius])(myDataset);
     }
 
-    function measureWidth(my_text){
-        //from https://observablehq.com/@mbostock/fit-text-to-circle
-        const context = document.createElement("canvas").getContext("2d");
-        return context.measureText(my_text).width;
-    }
 
     function pathText(d,includeZero){
 
@@ -220,38 +223,58 @@ function zoomToBounds(expandable,transitionTime) {
             .attr("fill", d => d.data.expandable === undefined ? "transparent" : mallMap.texture.url())
             .attr("d", arc)
 
+
         pathGroup.select(".sunburstPath")
+            .attr("id", (d,i) =>  d.data.well_id === undefined ? "notwell" + i : "well" + d.data.well_id)
             .attr("opacity",1)
             .attr("fill", getPathFill)
             .attr("d", arc)
             .on("mouseover",function(event,d){
                 if(midTransition === false){
-                    d3.selectAll(".sunburstPath").attr("opacity",1);
-                    d3.select(this).interrupt().transition().duration(100).attr("opacity",0.5);
+                    d3.selectAll(".sunburstPath").attr("opacity",0.5);
+                    d3.selectAll(".pyramidBar").attr("opacity",0.5);
+                    d3.selectAll("#" + this.id).attr("opacity",1);
                     var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+                    if(d.data.relativeValue !== undefined){
+                        var tooltipText = "<strong></strong><span style=color:" + d.data.group_color + ";'>" + d.data.group.toUpperCase() + "</span></strong><br><span style='font-weight:normal;'>Well: " + d.data.name
+                            + " (" + d.data.well_id + ")<br>Difference: $" + d3.format(".3s")(d.data.difference)
+                            +  "<br>Ipc Revenue: $" + d3.format(".3s")(d.data.ipc)
+                            + "<br>Actual Revenue: " + d3.format(".3s")(d.data.actual) + "</span><br>";
+
+                    } else {
+                        tooltipText = d.data.name;
+                    }
                     d3.select(".d3_tooltip")
                         .style("visibility","visible")
                         .style("top",(event.offsetY + svgBounds.y) + "px")
                         .style("left",(event.offsetX + svgBounds.x + 10) + "px")
-                        .html(d.data.name + (d.data.difference === undefined ? "" : "<br>Difference: US$ " + d3.format(",.0f")(d.data.difference)));
+                        .html(tooltipText);
+
+                    if(d.data.relativeValue !== undefined){
+                        d3.selectAll(".d3_tooltip").selectAll("svg").remove();
+                        drawSvg("d3_tooltip_div");
+                        drawTooltipMallMap(mallMap.mainData,"d3_tooltip_div",d.data.well_id);
+                    }
+
                 }
             })
             .on("mouseout",function(){
                 if(midTransition === false){
                     d3.select(".d3_tooltip").style("visibility","hidden");
-                    d3.select(this).interrupt().transition().duration(100).attr("opacity",1);
+                    d3.selectAll(".sunburstPath").attr("opacity",1);
+                    d3.selectAll(".pyramidBar").attr("opacity",1);
                 }
             })
             .on("click",function(event,d){
                 if(d.depth > 0 && midTransition === false){
                     if(d.data.well_id !== undefined){
                         mallMap.selectedColor = d.data.well_id;
-                        d3.select("#radio_" + d.data.well_id).node().checked = true;
                         initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                        drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"},{"depth":0,"label":"BACK","fill":"#F0F0F0", "data":sunburstData,"breadcrumbs":currentBreadcrumbData}])
                     } else {
                         //get breadcrumb data and redraw breadcrumb
-                        const breadcrumbData = getBreadcrumbs(d);
-                        drawBreadcrumbs(breadcrumbData);
+                        currentBreadcrumbData = getBreadcrumbs(d);
+                        drawBreadcrumbs(currentBreadcrumbData);
                         //if expandable, add foldoutdata
                         if(d.data.expandable !== undefined){
                             addFoldoutData(d);
@@ -286,6 +309,8 @@ function zoomToBounds(expandable,transitionTime) {
     }
 
     function addFoldoutData(d){
+
+
         //copy the hierarchy
         var myCopy = {"value":d.value,"name":d.data.name,"id":d.data.id,"colors":d.data.colors,"children":[]};
         addChildren(d.children,myCopy);
@@ -350,22 +375,40 @@ function zoomToBounds(expandable,transitionTime) {
             .on("click",function(event,d){
                 if(midTransition === false){
                     var myRoot = root.descendants().find(f => f.depth === d.depth && f.data.name === d.label);
+                    var myDepth = d.depth;
+                    if(d.label === "BACK"){
+                        myRoot = d.data;
+                        myDepth = d3.min(myRoot,m => m.depth);
+                        if(d.depth === 0){allData = true};
+                        selectedColor = "default";
+                    }
                     var allData = false;
-                    if(d.depth > 0) {
+                    if(myDepth > 0) {
                         //reset breadcrumbs if > 0
                         var breadcrumbData = getBreadcrumbs(myRoot);
+                        if(myRoot.data === undefined){
+                            breadcrumbData = currentBreadcrumbData;
+                        }
                         drawBreadcrumbs(breadcrumbData);
+                        currentBreadcrumbData = breadcrumbData;
                     } else {
                         //or reset to default breadcrumb
                         allData = true;
                         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"}]);
+                        currentBreadcrumbData = [{"depth":0,"label":"Home","fill":"white"}];
                     }
-                    if(myRoot.data.expandable !== undefined){
+                    var expandable = false;
+                    if(myRoot.data === undefined){
+                        if(myRoot.find(f => f.depth === myDepth).data.expandable !== undefined){
+                            expandable = true;
+                        }
+                    } else {
+                        expandable = myRoot.data.expandable !== undefined ? true : false;
                         addFoldoutData(myRoot);
                     }
                     //draw chart and zoom.
                     drawSunburst(myRoot,allData);
-                    zoomToBounds(myRoot.data.expandable === undefined ? false : true,1000);
+                    zoomToBounds(expandable,1000);
                 }
             })
 
@@ -396,6 +439,25 @@ function zoomToBounds(expandable,transitionTime) {
     }
 
     function getBreadcrumbs(d){
+
+        //loop through and add breadcrumb for each depth;
+        var currentDepth = d.depth;
+        var breadcrumbData = [], currentParent = d;
+        while (currentDepth > 0){
+            breadcrumbData.push({
+                "depth":currentParent.depth,
+                "label":currentParent.data.name,
+                "fill":currentParent.depth === 0 ? "white" : getPathFill(currentParent)
+            })
+            currentDepth = currentParent.depth;
+            currentParent = currentParent.parent;
+        }
+        return breadcrumbData;
+    }
+
+    function getBreadcrumbsBack(d){
+
+        debugger;
         //loop through and add breadcrumb for each depth;
         var currentDepth = d.depth;
         var breadcrumbData = [], currentParent = d;
@@ -470,6 +532,85 @@ function zoomToBounds(expandable,transitionTime) {
     return my;
 }
 
+function tooltipMallMapChart() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="",
+        selectedColor = "";
+
+    function my(svg) {
+
+
+        const chartWidth = Math.min(width, height);
+
+        const radius = chartWidth/2;
+        const translateStr = "translate(" + (width/2) + "," + (height/2) + ")";
+
+        const myHierarchy = d3.hierarchy(myData);
+        myHierarchy.sum(d => d.children ? 0 : isNaN(d.value) ? 1 : d.value);
+        const root = d3.partition().size([2 * Math.PI, radius*1.4])(myHierarchy);
+
+        const arc = d3.arc()
+            .startAngle(d => d.x0)
+            .endAngle(d => d.x1)
+            .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+            .padRadius(radius / 2)
+            .innerRadius(d => d.y0)
+            .outerRadius(d => d.y1 - 1);
+
+        const pathGroup = svg.selectAll('.pathGroup' + myClass)
+            .data(root.descendants())
+            .join(function(group){
+                var enter = group.append("g").attr("class","pathGroup" + myClass);
+                enter.append("path").attr("class","tooltipMiniMapPath");
+                return enter;
+            });
+
+        pathGroup
+            .attr("transform",translateStr);
+
+        pathGroup.select(".tooltipMiniMapPath")
+            .attr("fill",  d => d.data.colors[selectedColor] === undefined ? "white" : d.data.colors[selectedColor])
+            .attr("d", arc);
+
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
+        return my;
+    };
+
+    my.selectedColor = function(value) {
+        if (!arguments.length) return selectedColor;
+        selectedColor = value;
+        return my;
+    };
+
+    return my;
+}
+
 function miniMallMapChart() {
 
     var width=0,
@@ -479,8 +620,8 @@ function miniMallMapChart() {
 
     function my(svg) {
 
-        const buttons = ["bar","tile","table","compare"];
-        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","table":"\uf0ce","compare":"\uf640"};
+        const buttons = ["bar","tile","map","compare"];
+        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","map":"\uf59f","compare":"\uf640"};
 
         const svgWidth = +d3.select("." + myClass + "Svg").attr("width");
 
@@ -1334,37 +1475,36 @@ function pyramidChart() {
         myData = [],
         myClass="",
         axisWidth = 20,
-        scaleType = "individual";
+        scaleType = "uniform";
 
     function my(svg) {
 
-        var groupData = [{"name":"Top 25","align":"left","dataValue":"topN","colour":"green","sort_order":"descending"},
-            {"name":"Bottom 25","align":"right","dataValue":"bottomN","colour":"red","sort_order":"ascending"}];
+        var groupData = [{"name":"Bottom 25","align":"right","dataValue":"bottomN","colour":"red","sort_order":"ascending"},
+            {"name":"Top 25","align":"left","dataValue":"topN","colour":"green","sort_order":"descending"}];
 
         var xMax = 0, ySet = new Set();
         groupData.forEach(function(d,index){
             var filteredData = myData.data.filter(f => f.position_flag === d.dataValue);
-            var ipc = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.ipc_revenue), r => r.well_id));
-            var actual = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => s.actual_revenue), r => r.well_id));
-            actual = actual.sort((a,b) => d3[d.sort_order](+a[1],+b[1]));
+
+            var values = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
             currentData = [];
-            actual.forEach(function(a,i){
-                var myIpc = ipc.find(f => f[0] === a[0])[1];
+            values.forEach(function(a,i){
                 currentData.push({
                     "well_id":a[0],
                     "wellName":myData.wellNames[a[0]],
-                    "value": +a[1],
-                    "ipc":+myIpc,
-                    "percent":+a[1]/+myIpc,
+                    "value":a[1],
+                    "ipc":d3.sum(filteredData, s => s.well_id === a[0] ? s.ipc_revenue : 0),
+                    "actual":d3.sum(filteredData, s => s.well_id === a[0] ? s.actual_revenue : 0),
                     "align":d.align,
-                    "position": i + 1,
                     "colour":d.colour,
                     "index":index,
                     "name":d.name
                 })
-                ySet.add(i+1);
+                ySet.add(i);
             })
             xMax = Math.max(xMax,d3.max(currentData, d => d.value));
+            currentData = currentData.sort((a,b) => d3[d.sort_order](a.value,b.value));
+            currentData.forEach((d,i) => d.position = i);
             d.data = currentData
         })
 
@@ -1416,7 +1556,7 @@ function pyramidChart() {
             groupDataGroup.select(".groupTitle")
                 .attr("x", d => (width/2) + (d.align === "left" ? -(axisWidth/2) : (axisWidth/2)))
                 .attr("text-anchor",d => d.align === "left" ? "end" : "start")
-                .attr("y",margins.top - 5)
+                .attr("y",margins.top - 6)
                 .text(d => d.name.toUpperCase());
 
             groupDataGroup.select(".axisLine")
@@ -1436,10 +1576,12 @@ function pyramidChart() {
                     var enter = group.append("g").attr("class","barGroup" + myClass);
                     enter.append("rect").attr("class","pyramidBar");
                     enter.append("text").attr("class","pyramidLabel");
+                    enter.append("text").attr("class","pyramidNameLabel");
                     return enter;
                 });
 
             barGroup.select(".pyramidBar")
+                .attr("id",d => "well" + d.well_id)
                 .attr("x",d =>  (width/2) + (d.align === "right" ? (axisWidth/2): - (xScales[d.index](d.value) + (axisWidth/2))))
                 .attr("y",d => yScale(d.position))
                 .attr("width",d => xScales[d.index](d.value))
@@ -1447,13 +1589,14 @@ function pyramidChart() {
                 .attr("cursor","pointer")
                 .attr("fill",d => d.colour)
                 .on("mouseover",function(event,d){
-                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",0.5);
-                    d3.select(this).interrupt().attr("opacity",1);
+                    d3.selectAll(".pyramidBar").attr("opacity",0.5);
+                    d3.selectAll(".sunburstPath").attr("opacity",0.5);
+                    d3.selectAll("#" + this.id).attr("opacity",1);
                     var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
-                    var tooltipText = d.name.toUpperCase() + "<br><span style='font-weight:normal;'>Well: " + d.wellName
-                        + " (" + d.well_id + ")<br>Revenue: US$" + d3.format(".3s")(d.value)
-                        +  "<br>Ipc Revenue: US$" + d3.format(".3s")(d.ipc)
-                        + "<br>Percent Revenue: " + d3.format(".1%")(d.percent) + "</span>";
+                    var tooltipText = "<strong></strong><span style=color:" + d.colour + ";'>" + d.name.toUpperCase() + "</span></strong><br><span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Difference: $" + d3.format(".3s")(d.value)
+                        +  "<br>Ipc Revenue: $" + d3.format(".3s")(d.ipc)
+                        + "<br>Actual Revenue: " + d3.format(".3s")(d.actual) + "</span>";
 
                         d3.select(".d3_tooltip")
                         .style("visibility","visible")
@@ -1461,29 +1604,48 @@ function pyramidChart() {
                         .style("left",(event.offsetX + svgBounds.x + 10) + "px")
                         .html(tooltipText);
 
+                        d3.selectAll(".d3_tooltip").selectAll("svg").remove();
+                        drawSvg("d3_tooltip_div");
+                        drawTooltipMallMap(mallMap.mainData,"d3_tooltip_div",d.well_id);
                 })
                 .on("mouseout",function(){
                     d3.select(".d3_tooltip").style("visibility","hidden");
-                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",1);
+                    d3.selectAll(".pyramidBar").attr("opacity",1);
+                    d3.selectAll(".sunburstPath").attr("opacity",1);
                 })
 
+
+            barGroup.select(".pyramidNameLabel")
+                .attr("pointer-events","none")
+                .attr("text-anchor",d => d.align === "left" ? "end" : "start")
+                .attr("x",d =>  (width/2) + (d.align === "right" ? (axisWidth/2) + 2
+                    : - 2 - (axisWidth/2)))
+                .attr("y",d => yScale(d.position) + (yScale.bandwidth()/2) + 2)
+                .attr("font-size",8)
+                .attr("fill","white")
+                .attr("font-weight","normal")
+                .text(d => measureWidth(d.wellName) <= (xScales[d.index](d.value) + 4) ? d.wellName : "")
+
             barGroup.select(".pyramidLabel")
+                .attr("id",d => "well" + d.well_id)
                 .attr("text-anchor",d => d.align === "left" ? "end" : "start")
                 .attr("x",d =>  (width/2) + (d.align === "right" ? ((axisWidth/2) + 2 + xScales[d.index](d.value))
                     : - ( 2 + xScales[d.index](d.value) + (axisWidth/2))))
-                .attr("y",d => yScale(d.position) + (yScale.bandwidth()/2) + 5)
-                .attr("font-size",10)
+                .attr("y",d => yScale(d.position) + (yScale.bandwidth()/2) + 2)
+                .attr("font-size",8)
+                .attr("fill","#707070")
                 .attr("cursor","pointer")
                 .attr("font-weight","normal")
-                .text(d => "US$" + d3.format(".3s")(d.value))
+                .text(d => "$" + d3.format(".3s")(d.value))
                 .on("mouseover",function(event,d){
-                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",0.5);
-                    d3.select(this).interrupt().attr("opacity",1);
+                    d3.selectAll(".pyramidBar").attr("opacity",0.5);
+                    d3.selectAll(".sunburstPath").attr("opacity",0.5);
+                    d3.selectAll("#" + this.id).attr("opacity",1);
                     var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
-                    var tooltipText = d.name.toUpperCase() + "<br><span style='font-weight:normal;'>Well: " + d.wellName
-                        + " (" + d.well_id + ")<br>Revenue: US$" + d3.format(".3s")(d.value)
-                        +  "<br>Ipc Revenue: US$" + d3.format(".3s")(d.ipc)
-                        + "<br>Percent Revenue: " + d3.format(".1%")(d.percent) + "</span>";
+                    var tooltipText = "<strong></strong><span style=color:" + d.colour + ";'>" + d.name.toUpperCase() + "</span></strong><br><span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Difference: $" + d3.format(".3s")(d.value)
+                        +  "<br>Ipc Revenue: $" + d3.format(".3s")(d.ipc)
+                        + "<br>Actual Revenue: " + d3.format(".3s")(d.actual) + "</span>";
 
                     d3.select(".d3_tooltip")
                         .style("visibility","visible")
@@ -1491,14 +1653,18 @@ function pyramidChart() {
                         .style("left",(event.offsetX + svgBounds.x + 10) + "px")
                         .html(tooltipText);
 
+                    d3.selectAll(".d3_tooltip").selectAll("svg").remove();
+                    drawSvg("d3_tooltip_div");
+                    drawTooltipMallMap(mallMap.mainData,"d3_tooltip_div",d.well_id);
                 })
                 .on("mouseout",function(){
                     d3.select(".d3_tooltip").style("visibility","hidden");
-                    d3.selectAll(".pyramidBar").interrupt().transition().duration(100).attr("opacity",1);
-                })
+                    d3.selectAll(".pyramidBar").attr("opacity",1);
+                    d3.selectAll(".sunburstPath").attr("opacity",1);
+                });
         }
 
-        const axisOptions = ["Individual Scales","Uniform Scales"];
+        const axisOptions = ["Uniform Scales","Individual Scales"];
 
         const axisGroup = svg.selectAll('.axisGroup' + myClass)
             .data(axisOptions)
@@ -1511,7 +1677,7 @@ function pyramidChart() {
         axisGroup.select(".axisText")
             .attr("id",(d,i) => "axisText" + i)
             .attr("opacity",(d,i) => i === 0 ? 1 : 0.4)
-            .attr("y",margins.top-20)
+            .attr("y",margins.top-30)
             .attr("cursor","pointer")
             .attr("font-size",10)
             .text((d,i) => (i === 0 ? "" : "|    ") + d.replace(/_/g,' '))

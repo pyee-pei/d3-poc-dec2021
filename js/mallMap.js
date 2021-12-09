@@ -48,7 +48,21 @@ function drawMiniMallMap(myData,divId){
     my_chart(svg);
 }
 
+function drawTooltipMallMap(myData,divId,selectedColor){
 
+    var svg = d3.select("." + divId + "Svg");
+    var height = +svg.attr("height");
+    var width = +svg.attr("width");
+
+    var my_chart = tooltipMallMapChart()
+        .width(width)
+        .height(height)
+        .myData(myData)
+        .myClass(divId)
+        .selectedColor(selectedColor);
+
+    my_chart(svg);
+}
 
 function drawStackedBar(){
     //quick win, will make this better
@@ -98,7 +112,7 @@ function drawPyramid(){
 
     var height = +svg.attr("height");
     var width = +svg.attr("width");
-    var margins = {"left":50,"right":50,"top":40,"bottom":30};
+    var margins = {"left":50,"right":50,"top":50,"bottom":30};
 
     var my_chart = pyramidChart()
         .width(width)

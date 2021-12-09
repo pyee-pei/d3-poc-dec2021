@@ -27,7 +27,7 @@
 <div id="chart_div"></div>
 <div id="extra_chart_div"></div>
 <div id="footer_div"></div>
-<div class="d3_tooltip"></div>
+<div class="d3_tooltip" id="d3_tooltip_div"></div>
 
 
 <script type="text/javascript" src="js/mallMap.js"></script>
@@ -69,8 +69,6 @@
         })
         extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
         extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
-
-
         //big cheat to update wells for 30 day IPC Actual (dev_production_data.csv)
         var thirtyDay = all_datasets[0].children[2].children[1].children[0].children[0].children[3];
         thirtyDay.children[0].expandable = true;
@@ -89,13 +87,22 @@
                 d.name = "";
                 d.relativeValue = 0;
                 d.difference = 0;
+                d.group = "Top 25";
+                d.group_color = "green";
+                d.ipc = 0;
+                d.actual = 0;
             } else {
                 d.well_id = groupedFilteredData[i][0];
                 d.name = wellNames[groupedFilteredData[i][0]];
                 d.relativeValue = groupedFilteredData[i][1]/(filterTotal/topTotal);
                 d.difference = groupedFilteredData[i][1];
+                d.group = "Top 25";
+                d.group_color = "green";
+                d.ipc = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.ipc_revenue : 0);
+                d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
             }
         })
+        //THIS REPETITION COULD OBVIOUSLY BE IMPROVED!!!
         var bottom25 = thirtyDay.children[2].children;
         var filteredData = extraChartData.data.filter(f => f.position_flag === "bottomN");
         var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
@@ -108,11 +115,19 @@
                 d.name = "";
                 d.relativeValue = 0;
                 d.difference = 0;
+                d.group = "Bottom 25";
+                d.group_color = "red";
+                d.ipc = 0;
+                d.actual = 0;
             } else {
                 d.well_id = groupedFilteredData[i][0];
                 d.name = wellNames[groupedFilteredData[i][0]];
                 d.relativeValue = groupedFilteredData[i][1]/(filterTotal/bottomTotal);
                 d.difference = groupedFilteredData[i][1];
+                d.group = "Bottom 25";
+                d.group_color = "red";
+                d.ipc = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.ipc_revenue : 0);
+                d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
             }
         })
 
