@@ -233,6 +233,7 @@ function zoomToBounds(expandable,transitionTime) {
                 if(midTransition === false){
                     d3.selectAll(".sunburstPath").attr("opacity",0.5);
                     d3.selectAll(".pyramidBar").attr("opacity",0.5);
+                    d3.selectAll(".wellCircle").attr("opacity",0.1);
                     d3.selectAll("#" + this.id).attr("opacity",1);
                     var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
                     if(d.data.relativeValue !== undefined){
@@ -255,13 +256,13 @@ function zoomToBounds(expandable,transitionTime) {
                         drawSvg("d3_tooltip_div");
                         drawTooltipMallMap(mallMap.mainData,"d3_tooltip_div",d.data.well_id);
                     }
-
                 }
             })
             .on("mouseout",function(){
                 if(midTransition === false){
                     d3.select(".d3_tooltip").style("visibility","hidden");
                     d3.selectAll(".sunburstPath").attr("opacity",1);
+                    d3.selectAll(".wellCircle").attr("opacity",1);
                     d3.selectAll(".pyramidBar").attr("opacity",1);
                 }
             })
@@ -269,7 +270,7 @@ function zoomToBounds(expandable,transitionTime) {
                 if(d.depth > 0 && midTransition === false){
                     if(d.data.well_id !== undefined){
                         mallMap.selectedColor = d.data.well_id;
-                        initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                        initialiseDashboard(mallMap.mainData, mallMap.extraData,mallMap.mapData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
                         drawBreadcrumbs([{"depth":0,"label":"Home","fill":"white"},{"depth":0,"label":"BACK","fill":"#F0F0F0", "data":sunburstData,"breadcrumbs":currentBreadcrumbData}])
                     } else {
                         //get breadcrumb data and redraw breadcrumb
@@ -620,8 +621,8 @@ function miniMallMapChart() {
 
     function my(svg) {
 
-        const buttons = ["bar","tile","map","compare"];
-        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","map":"\uf59f","compare":"\uf640"};
+        const buttons = ["bar","tile","map","compare","file"];
+        const buttonIcons = {"map":"\uf185","fan":"\uf863","bar":"\uf080","tile":"\uf5fd","map":"\uf59f","compare":"\uf640","file":"\uf56d"};
 
         const svgWidth = +d3.select("." + myClass + "Svg").attr("width");
 
@@ -669,9 +670,9 @@ function miniMallMapChart() {
             .data(buttons)
             .join(function(group){
                 var enter = group.append("g").attr("class","buttonGroup" + myClass);
-                enter.append("rect").attr("class","buttonRect");
-                enter.append("text").attr("class","buttonIcon fal");
-                enter.append("text").attr("class","buttonLabel");
+                enter.append("rect").attr("class","buttonItem buttonRect");
+                enter.append("text").attr("class","buttonItem buttonIcon fal");
+                enter.append("text").attr("class","buttonItem buttonLabel");
                 return enter;
             });
 
@@ -688,16 +689,41 @@ function miniMallMapChart() {
             .attr("height",30)
             .attr("transform","translate(" + (10 + (chartWidth*1.4) + buttonTransformX) + ",5)")
             .on("click",function(event,d){
-                d3.selectAll(".buttonRect").attr("opacity",0.4);
+                d3.selectAll(".buttonItem").attr("opacity",0.4);
                 if(d === "bar"){
                     d3.selectAll("#bar").attr("opacity",1);
                     drawStackedBar();
-                } else if(d === "table"){
-                    window.open("dataTable.html")
                 } else if(d === "tile"){
-                        d3.selectAll("#tile").attr("opacity",1);
-                        drawLineMultiples();
-                } else {
+                    d3.selectAll("#tile").attr("opacity",1);
+                    drawLineMultiples();
+                } else if(d === "map"){
+                        d3.selectAll("#map").attr("opacity",1);
+                        drawWellMap();
+                } else if(d === "file"){
+                    d3.selectAll("#file").attr("opacity",1);
+
+                    var hiddenElement = document.createElement('a');
+                    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(JsonToCSV(mallMap.extraChartData.data));
+                    hiddenElement.target = '_blank';
+                    hiddenElement.download = 'output.csv';
+                    hiddenElement.click();
+                    hiddenElement.remove();
+
+                    function JsonToCSV(myArray){
+                        var myKeys = Object.keys(myArray[0]);
+                        var csvStr = myKeys.join(",") + "\n";
+
+                        myArray.forEach(element => {
+                            myKeys.forEach(function(k){
+                                csvStr += element[k] + ","
+                            })
+
+                            csvStr += "\n";
+                        })
+                        return csvStr;
+                    }
+
+                }else {
                     d3.selectAll("#compare").attr("opacity",1);
                     drawPyramid();
                 }
@@ -1305,7 +1331,7 @@ function lineMultipleChart() {
             const chartGroup = svg.selectAll('.chartGroup' + myClass)
                 .data(wellGroup)
                 .join(function(group){
-                    var enter = group.append("g").attr("class","chartGroup" + myClass);
+                    var enter = group.append("g").attr("class","tileGroup chartGroup" + myClass);
                     enter.append("rect").attr("class","wellRect");
                     enter.append("text").attr("class","wellLabel");
                     enter.append("text").attr("class","wellMaxLabel");
@@ -1315,6 +1341,7 @@ function lineMultipleChart() {
                 });
 
             chartGroup
+                .attr("id",d => "well" + d[0])
                 .attr("transform",(d,i) => "translate(" + ((i % 5) * chartWidth)
                     + "," + (parseInt(i/5) * chartHeight) + ")")
 
@@ -1715,6 +1742,168 @@ function pyramidChart() {
     my.myData = function(value) {
         if (!arguments.length) return myData;
         myData = value;
+        return my;
+    };
+
+
+    my.myClass = function(value) {
+        if (!arguments.length) return myClass;
+        myClass = value;
+        return my;
+    };
+
+    my.margins = function(value) {
+        if (!arguments.length) return margins;
+        margins = value;
+        return my;
+    };
+
+    return my;
+}
+
+
+
+function wellMap() {
+
+    var width=0,
+        height=0,
+        myData = [],
+        myClass="",
+        mapData = [];
+
+    function my(svg) {
+        svg = svg.select(".zoomSvg" + myClass);
+
+        const zoom = d3.zoom()
+            .on("zoom", zoomed);
+
+        const radiusScale = d3.scaleLinear().domain(d3.extent(myData, d => d.difference)).range([2,4]);
+
+        svg.call(zoom);
+
+        const projection = d3.geoAlbersUsa()
+            .fitSize([width, height], mapData)
+
+        const path = d3.geoPath().projection(projection);
+
+        const statesGroup = svg.selectAll('.statesGroup' + myClass)
+            .data(mapData.features)
+            .join(function(group){
+                var enter = group.append("g").attr("class","statesGroup" + myClass);
+                enter.append("path").attr("class","statePath");
+                return enter;
+            });
+
+        statesGroup.select(".statePath")
+            .attr("fill", "#D0D0D0")
+            .attr("stroke","white")
+            .attr("stroke-width",0.5)
+            .attr("d", path);
+
+        const wellsGroup = svg.selectAll('.wellsGroup' + myClass)
+            .data(myData)
+            .join(function(group){
+                var enter = group.append("g").attr("class","wellsGroup" + myClass);
+                enter.append("circle").attr("class","wellCircle");
+                return enter;
+            });
+
+        wellsGroup.select(".wellCircle")
+            .attr("id",d => "well" + d.well_id)
+            .attr("fill", "white")
+            .attr("fill-opacity",0.4)
+            .attr("fill",d => d.position_flag === "topN" ? "green" : (d.position_flag == "bottomN" ? "red" : "white"))
+            .attr("stroke","transparent")
+            .attr("r",d => radiusScale(d.difference))
+            .attr("cx", d => projection(d.long_lat)[0])
+            .attr("cy", d => projection(d.long_lat)[1])
+            .on("mouseover",function(event,d){
+                var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+                if(d.position_flag !== ""){
+                    d3.selectAll(".wellCircle").attr("opacity",0.2);
+                    d3.selectAll(".sunburstPath").attr("opacity",0.5);
+                    d3.selectAll("#" + this.id).attr("opacity",1);
+
+                    var tooltipText = "<strong></strong><span style=color:" + (d.position_flag === "topN" ? "green" : "red")
+                        + ";'>" + (d.position_flag === "topN" ? "top 25" : "bottom 25").toUpperCase()
+                        + "</span></strong><br><span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Difference: $" + d3.format(".3s")(d.difference)
+                        +  "<br>Ipc Revenue: $" + d3.format(".3s")(d.ipc)
+                        + "<br>Actual Revenue: " + d3.format(".3s")(d.actual) + "</span>";
+                } else {
+                    var tooltipText = "<span style='font-weight:normal;'>Well: " + d.wellName
+                        + " (" + d.well_id + ")<br>Difference: $" + d3.format(".3s")(d.difference)
+                        +  "<br>Ipc Revenue: $" + d3.format(".3s")(d.ipc)
+                        + "<br>Actual Revenue: " + d3.format(".3s")(d.actual) + "</span>";
+                }
+                d3.select(".d3_tooltip")
+                    .style("visibility","visible")
+                    .style("top",(event.offsetY + svgBounds.y) + "px")
+                    .style("left",(event.offsetX + svgBounds.x + 10) + "px")
+                    .html(tooltipText);
+
+                d3.selectAll(".d3_tooltip").selectAll("svg").remove();
+                drawSvg("d3_tooltip_div");
+                drawTooltipMallMap(mallMap.mainData,"d3_tooltip_div",d.well_id);
+            })
+            .on("mouseout",function(){
+                d3.select(".d3_tooltip").style("visibility","hidden");
+                d3.selectAll(".pyramidBar").attr("opacity",1);
+                d3.selectAll(".sunburstPath").attr("opacity",1);
+            });
+
+        zoomToBounds();
+
+        function zoomToBounds(){
+            var xExtent = d3.extent(myData, d => projection(d.long_lat)[0]);
+            var yExtent = d3.extent(myData, d => projection(d.long_lat)[1]);
+            var x0 = xExtent[0];
+            var x1 = xExtent[1];
+            var y0 = yExtent[0];
+            var y1 = yExtent[1];
+
+            var scale =  0.9 / Math.max((x1- x0) / width, (y1 - y0) / height);
+
+            const transformStr = d3.zoomIdentity
+                .translate(width / 2, height / 2)
+                .scale(scale)
+                .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+
+            //transform the svg
+            svg.attr("transform",transformStr);
+
+            svg.transition().duration(2000).call(zoom.transform, transformStr);
+        }
+
+        function zoomed(event) {
+            const {transform} = event;
+            svg.attr("transform", transform);
+            d3.selectAll(".statePath").attr("stroke-width", 0.25 / transform.k);
+            d3.selectAll(".wellCircle") .attr("r",d => radiusScale(d.difference)/transform.k).attr("stroke-width",0.25/transform.k)
+        }
+    }
+
+    my.width = function(value) {
+        if (!arguments.length) return width;
+        width = value;
+        return my;
+    };
+
+    my.height = function(value) {
+        if (!arguments.length) return height;
+        height = value;
+        return my;
+    };
+
+    my.myData = function(value) {
+        if (!arguments.length) return myData;
+        myData = value;
+        return my;
+    };
+
+    my.mapData = function(value) {
+        if (!arguments.length) return mapData;
+        mapData = value;
         return my;
     };
 

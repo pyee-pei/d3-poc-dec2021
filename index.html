@@ -39,7 +39,8 @@
         d3.json("data/mallMap2.json"),
         d3.csv("data/dev_production_data_v2.csv"),
         d3.csv("data/node_color_matrix_v2.csv"),
-        d3.csv("data/well_groups.csv")
+        d3.csv("data/well_groups.csv"),
+        d3.json("data/usStates.json")
     ]
 
     Promise.all(promises).then(ready)
@@ -62,7 +63,7 @@
                     "op_code":d.op_code,
                     "route_name":d.route_name,
                     "position_flag":d["30_day_revenue_ipc_delta_flag"],
-                    "lat_long":[+d.latitude_surface,+d.longitude_surface]
+                    "long_lat":[+d.longitude_surface,+d.latitude_surface]
 
                 })
             }
@@ -225,7 +226,8 @@
 
         mallMap.mainData = all_datasets[0];
         mallMap.extraData = extraChartData;
-        initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+        mallMap.mapData = all_datasets[4];
+        initialiseDashboard(mallMap.mainData, mallMap.extraData,mallMap.mapData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
 
         d3.selectAll(".datasetChoice")
             .on("change",function(d){
@@ -233,7 +235,7 @@
                     populateWells(wellsByGroup[this.value]);
                 }
                 mallMap.selectedColor = this.value === "functional" ? "default" : this.value;
-                initialiseDashboard(mallMap.mainData, mallMap.extraData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+                initialiseDashboard(mallMap.mainData, mallMap.extraData,mallMap.mapData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
             });
 
         function convertDate(myDate){

@@ -10,5 +10,6 @@ var mallMap = {
     "sunburstChart":"",
     "stackedBarChart":"",
     "mainData":"",
-    "extraData":""
+    "extraData":"",
+    "mapData":""
 };
