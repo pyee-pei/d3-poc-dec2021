@@ -40,7 +40,8 @@
         d3.csv("data/dev_production_data_v2.csv"),
         d3.csv("data/node_color_matrix_v2.csv"),
         d3.csv("data/well_groups.csv"),
-        d3.json("data/usStates.json")
+        d3.json("data/usStates.json"),
+        d3.csv("data/stateCodes.csv")
     ]
 
     Promise.all(promises).then(ready)
@@ -49,6 +50,14 @@
 
         var extraChartData = [],
         wellNames = {};
+
+        all_datasets[4].features.forEach(function(d){
+            var myState = all_datasets[5].find(f => +f.fpcode === +d.properties.STATEFP);
+            if(myState === undefined){
+                debugger;
+            }
+            d.properties.state = myState.Name;
+        })
 
         //format extra chart data (only 30 day at moment)
         all_datasets[1].forEach(function(d){
@@ -191,7 +200,7 @@
             .style("font-size","12px")
             .attr("x",30)
             .attr("y",(d,i) => (i*12))
-            .html(d => d);
+            .html(d => d + " (" + wellsByGroup[d].length + ")");
 
         populateWells(matrixWellIds);
 

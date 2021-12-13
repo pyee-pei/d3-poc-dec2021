@@ -233,8 +233,12 @@ function zoomToBounds(expandable,transitionTime) {
                 if(midTransition === false){
                     d3.selectAll(".sunburstPath").attr("opacity",0.5);
                     d3.selectAll(".pyramidBar").attr("opacity",0.5);
-                    d3.selectAll(".wellCircle").attr("opacity",0.1);
                     d3.selectAll("#" + this.id).attr("opacity",1);
+                    d3.selectAll(".wellCircle").attr("stroke","transparent");
+                    d3.selectAll("circle#" + this.id).attr("stroke","#333333");
+                    if(d3.select("circle#" + this.id).node() !== null){
+                        d3.select(d3.select("circle#" + this.id).node().parentElement).raise();
+                    };
                     var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
                     if(d.data.relativeValue !== undefined){
                         var tooltipText = "<strong></strong><span style=color:" + d.data.group_color + ";'>" + d.data.group.toUpperCase() + "</span></strong><br><span style='font-weight:normal;'>Well: " + d.data.name
@@ -262,7 +266,7 @@ function zoomToBounds(expandable,transitionTime) {
                 if(midTransition === false){
                     d3.select(".d3_tooltip").style("visibility","hidden");
                     d3.selectAll(".sunburstPath").attr("opacity",1);
-                    d3.selectAll(".wellCircle").attr("opacity",1);
+                    d3.selectAll(".wellCircle").attr("opacity",1).attr("stroke","transparent")
                     d3.selectAll(".pyramidBar").attr("opacity",1);
                 }
             })
@@ -678,8 +682,8 @@ function miniMallMapChart() {
 
         buttonGroup
             .attr("id",d => d)
-            .attr("opacity",d => d === "fan" || d === "map" ? 0.2 : (d === "bar" ? 1 : 0.4))
-            .attr("cursor",d => d === "fan" || d === "map" ? "disabled" : "pointer")
+            .attr("opacity",d => d === "bar" ? 1 : 0.4)
+            .attr("cursor", "pointer");
 
         buttonGroup.select(".buttonRect")
             .attr("width",buttonWidth)
@@ -711,14 +715,26 @@ function miniMallMapChart() {
 
                     function JsonToCSV(myArray){
                         var myKeys = Object.keys(myArray[0]);
+                        myKeys = myKeys.filter(f => f !== "long_lat");
+                        myKeys = myKeys.concat(["long","lat"])
                         var csvStr = myKeys.join(",") + "\n";
 
+                        myArray = myArray.sort((a,b) => d3.ascending(a.well_id,b.well_id));
                         myArray.forEach(element => {
-                            myKeys.forEach(function(k){
-                                csvStr += element[k] + ","
-                            })
-
-                            csvStr += "\n";
+                            if(element["position_flag"] !== ""){
+                                myKeys.forEach(function(k){
+                                    if(k !== "long" && k !== "lat"){
+                                        csvStr += element[k] + ","
+                                    } else {
+                                        if(k === "long"){
+                                            csvStr += element["long_lat"][0] + ","
+                                        } else {
+                                            csvStr += element["long_lat"][1]
+                                        }
+                                    }
+                                })
+                                csvStr += "\n";
+                            }
                         })
                         return csvStr;
                     }
@@ -1506,8 +1522,8 @@ function pyramidChart() {
 
     function my(svg) {
 
-        var groupData = [{"name":"Bottom 25","align":"right","dataValue":"bottomN","colour":"red","sort_order":"ascending"},
-            {"name":"Top 25","align":"left","dataValue":"topN","colour":"green","sort_order":"descending"}];
+        var groupData = [{"name":"Bottom 25","align":"left","dataValue":"bottomN","colour":"red","sort_order":"ascending"},
+            {"name":"Top 25","align":"right","dataValue":"topN","colour":"green","sort_order":"descending"}];
 
         var xMax = 0, ySet = new Set();
         groupData.forEach(function(d,index){
@@ -1798,7 +1814,23 @@ function wellMap() {
             .attr("fill", "#D0D0D0")
             .attr("stroke","white")
             .attr("stroke-width",0.5)
-            .attr("d", path);
+            .attr("d", path)
+            .on("mousemove",function(event,d){
+                var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
+
+                var tooltipText = d.properties.NAME === d.properties.state ? d.properties.NAME :
+                    d.properties.NAME + ", " + d.properties.state;
+                d3.select(".d3_tooltip")
+                    .style("visibility","visible")
+                    .style("top",(event.offsetY + svgBounds.y) + "px")
+                    .style("left",(event.offsetX + svgBounds.x + 10) + "px")
+                    .html(tooltipText);
+
+                d3.selectAll(".d3_tooltip").selectAll("svg").remove();
+            })
+            .on("mouseout",function(){
+                d3.select(".d3_tooltip").style("visibility","hidden");
+            });
 
         const wellsGroup = svg.selectAll('.wellsGroup' + myClass)
             .data(myData)
@@ -1814,13 +1846,13 @@ function wellMap() {
             .attr("fill-opacity",0.4)
             .attr("fill",d => d.position_flag === "topN" ? "green" : (d.position_flag == "bottomN" ? "red" : "white"))
             .attr("stroke","transparent")
+            .attr("stroke-width",3)
             .attr("r",d => radiusScale(d.difference))
             .attr("cx", d => projection(d.long_lat)[0])
             .attr("cy", d => projection(d.long_lat)[1])
             .on("mouseover",function(event,d){
                 var svgBounds = d3.select("." + myClass + "Svg").node().getBoundingClientRect();
                 if(d.position_flag !== ""){
-                    d3.selectAll(".wellCircle").attr("opacity",0.2);
                     d3.selectAll(".sunburstPath").attr("opacity",0.5);
                     d3.selectAll("#" + this.id).attr("opacity",1);
 
@@ -1878,8 +1910,9 @@ function wellMap() {
         function zoomed(event) {
             const {transform} = event;
             svg.attr("transform", transform);
-            d3.selectAll(".statePath").attr("stroke-width", 0.25 / transform.k);
-            d3.selectAll(".wellCircle") .attr("r",d => radiusScale(d.difference)/transform.k).attr("stroke-width",0.25/transform.k)
+            d3.selectAll(".statePath").attr("stroke-width", 1.5 / transform.k);
+            d3.selectAll(".wellCircle") .attr("r",d => radiusScale(d.difference)/transform.k)
+                .attr("stroke-width",1.5/transform.k)
         }
     }
 
