@@ -36,8 +36,8 @@
 <script>
 
     var promises = [
-        //d3.json("data/mallMap2.json"),
-        d3.json("data/mall-map-dynamic-v1.json"),
+        d3.json("data/mallMap2.json"),
+        //d3.json("data/mall-map-dynamic-v1.json"),
         d3.csv("data/dev_production_data_v2.csv"),
         d3.csv("data/node_color_matrix_v2.csv"),
         d3.csv("data/well_groups.csv"),
@@ -72,7 +72,6 @@
         extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
         extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
         //big cheat to update wells for 30 day IPC Actual (dev_production_data.csv)
-        /*
         var thirtyDay = all_datasets[0].children[2].children[1].children[0].children[0].children[3];
         thirtyDay.children[0].expandable = true;
         thirtyDay.children[2].expandable = true;
@@ -138,7 +137,7 @@
 
 
         all_datasets[0].children = addColour(all_datasets[0].children);
-        */
+
         function addColour(myChildren){
             myChildren.forEach(function(c){
                 var matrixColumn = colourMatrix.columns.indexOf(c.id);
