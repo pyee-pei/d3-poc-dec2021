@@ -72,6 +72,7 @@
         extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
         extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
         //big cheat to update wells for 30 day IPC Actual (dev_production_data.csv)
+        /*
         var thirtyDay = all_datasets[0].children[2].children[1].children[0].children[0].children[3];
         thirtyDay.children[0].expandable = true;
         thirtyDay.children[2].expandable = true;
@@ -132,7 +133,7 @@
                 d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
             }
         })
-
+        */
         var colourMatrix = all_datasets[2], matrixWellIds = new Set(), groupNames = new Set();
 
 
