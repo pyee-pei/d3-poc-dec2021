@@ -133,12 +133,12 @@
                 d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
             }
         })
-        */
+        
         var colourMatrix = all_datasets[2], matrixWellIds = new Set(), groupNames = new Set();
 
 
         all_datasets[0].children = addColour(all_datasets[0].children);
-
+        */
         function addColour(myChildren){
             myChildren.forEach(function(c){
                 var matrixColumn = colourMatrix.columns.indexOf(c.id);
