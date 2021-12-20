@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mall Map Prototype</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+    <link rel="stylesheet" href="css/mallMap.css"/>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://kit.fontawesome.com/c073ebcd4d.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/textures@1.2.0/dist/textures.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="header_div">
+    <div id="functional_div">
+        <input type="radio" class="datasetChoice" name="datasetChoice" id="functional" value="functional" checked><label for="functional" style="font-weight: bold;">FUNCTIONAL</label>
+    </div>
+    <div id="group_div">
+        <span style="font-weight: bold;">GROUPS</span><br><br>
+    </div>
+    <div id="well_div">
+        <span style="font-weight: bold;">WELLS</span><br><br>
+    </div>
+
+</div>
+<div id="breadcrumb_div"></div>
+<h1>Testing ALT index.html</h1>
+
+<div id="chart_div"></div>
+<div id="extra_chart_div"></div>
+<div id="footer_div"></div>
+<div class="d3_tooltip" id="d3_tooltip_div"></div>
+
+
+<script type="text/javascript" src="js/mallMap.js"></script>
+<script type="text/javascript" src="js/mallMapReusables.js"></script>
+<script type="text/javascript" src="js/mallMapProperties.js"></script>
+<script>
+
+    var promises = [
+        d3.json("data/mallMap2.json"),
+        //d3.json("data/mall-map-dynamic-v1.json"),
+        d3.csv("data/dev_production_data_v2.csv"),
+        d3.csv("data/node_color_matrix_v2.csv"),
+        d3.csv("data/well_groups.csv"),
+        d3.json("data/usStates.json")
+    ]
+
+    Promise.all(promises).then(ready)
+
+    function ready(all_datasets) {
+
+        var extraChartData = [],
+        wellNames = {};
+
+        //format extra chart data (only 30 day at moment)
+        all_datasets[1].forEach(function(d){
+            if(d.current_status === "ACTIVE"){
+                wellNames[d.well_id] = d.well_name;
+                extraChartData.push({
+                    "date":convertDate(d.DATE),
+                    "well_id":d.well_id,
+                    "well_orientation":d.well_orientation,
+                    "actual_revenue":+d.actual_revenue_minus_royalty,
+                    "ipc_revenue":+d.ipc_revenue_minus_royalty,
+                    "op_code":d.op_code,
+                    "route_name":d.route_name,
+                    "position_flag":d["30_day_revenue_ipc_delta_flag"],
+                    "long_lat":[+d.longitude_surface,+d.latitude_surface]
+
+                })
+            }
+        })
+        extraChartData = extraChartData.sort((a,b) => d3.ascending(a.date,b.date))
+        extraChartData = {"wellNames":wellNames,"clientName":all_datasets[2][0].client_name,"data":extraChartData};
+        //big cheat to update wells for 30 day IPC Actual (dev_production_data.csv)
+        var thirtyDay = all_datasets[0].children[2].children[1].children[0].children[0].children[3];
+        thirtyDay.children[0].expandable = true;
+        thirtyDay.children[2].expandable = true;
+        thirtyDay.children[0].relative = true;
+        thirtyDay.children[2].relative = true;
+        var top25 = thirtyDay.children[0].children;
+        var filteredData = extraChartData.data.filter(f => f.position_flag === "topN");
+        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
+        groupedFilteredData = groupedFilteredData.sort((a,b) => d3.descending(a[1],b[1]));
+        var filterTotal = d3.sum(groupedFilteredData, d => d[1]);
+        var topTotal = d3.sum(top25, d => d.value);
+        top25.forEach(function(d,i){
+            if(groupedFilteredData[i] === undefined){
+                d.well_id = null;
+                d.name = "";
+                d.relativeValue = 0;
+                d.difference = 0;
+                d.group = "Top 25";
+                d.group_color = "green";
+                d.ipc = 0;
+                d.actual = 0;
+            } else {
+                d.well_id = groupedFilteredData[i][0];
+                d.name = wellNames[groupedFilteredData[i][0]];
+                d.relativeValue = groupedFilteredData[i][1]/(filterTotal/topTotal);
+                d.difference = groupedFilteredData[i][1];
+                d.group = "Top 25";
+                d.group_color = "green";
+                d.ipc = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.ipc_revenue : 0);
+                d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
+            }
+        })
+        //THIS REPETITION COULD OBVIOUSLY BE IMPROVED!!!
+        var bottom25 = thirtyDay.children[2].children;
+        var filteredData = extraChartData.data.filter(f => f.position_flag === "bottomN");
+        var groupedFilteredData = Array.from(d3.rollup(filteredData, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
+        groupedFilteredData = groupedFilteredData.sort((a,b) => d3.ascending(a[1],b[1]));
+        var filterTotal = d3.sum(groupedFilteredData, d => d[1]);
+        var bottomTotal = d3.sum(bottom25, d => d.value);
+        bottom25.forEach(function(d,i){
+            if(groupedFilteredData[i] === undefined){
+                d.well_id = null;
+                d.name = "";
+                d.relativeValue = 0;
+                d.difference = 0;
+                d.group = "Bottom 25";
+                d.group_color = "red";
+                d.ipc = 0;
+                d.actual = 0;
+            } else {
+                d.well_id = groupedFilteredData[i][0];
+                d.name = wellNames[groupedFilteredData[i][0]];
+                d.relativeValue = groupedFilteredData[i][1]/(filterTotal/bottomTotal);
+                d.difference = groupedFilteredData[i][1];
+                d.group = "Bottom 25";
+                d.group_color = "red";
+                d.ipc = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.ipc_revenue : 0);
+                d.actual = d3.sum(filteredData, s => s.well_id === groupedFilteredData[i][0] ? s.actual_revenue : 0);
+            }
+        })
+        
+        var colourMatrix = all_datasets[2], matrixWellIds = new Set(), groupNames = new Set();
+
+
+        all_datasets[0].children = addColour(all_datasets[0].children);
+
+        function addColour(myChildren){
+            myChildren.forEach(function(c){
+                var matrixColumn = colourMatrix.columns.indexOf(c.id);
+                colourMatrix.forEach(function(m){
+                    if(m.well_or_group === "group"){
+                        groupNames.add(m.name);
+                    } else {
+                        matrixWellIds.add(m.well_id);
+                    }
+                    if(matrixColumn > -1) {
+                        c.colors[m.well_id] = m[colourMatrix.columns[matrixColumn]];
+                    } else {
+                        c.colors[m.well_id] = "#F0F0F0";
+                    }
+                })
+                if(c.children !== undefined){
+                    addColour(c.children);
+                }
+            })
+            return myChildren;
+        }
+        matrixWellIds = Array.from(matrixWellIds.values());
+        groupNames = Array.from(groupNames.values());
+
+        var wellsByGroup = {};
+        groupNames.forEach(function(d){
+            var filteredData = all_datasets[3].filter(f => f.group_name === d);
+            var myIds = [];
+            filteredData.forEach(f => myIds.push(f.well_id));
+            wellsByGroup[d] = myIds;
+        })
+
+        var divGroup = d3.select("#group_div").selectAll('.groupDivInputs')
+            .data(groupNames)
+            .join(function(group){
+                var enter = group.append("g").attr("class","groupDivInputs");
+                enter.append("input").attr("class","groupInput");
+                enter.append("span").attr("class","groupInputLabel");
+                enter.append("br");
+                return enter;
+            });
+
+        divGroup.select(".groupInput")
+            .attr("id","group")
+            .attr("y",(d,i) => (i*12))
+            .attr("type","radio")
+            .attr("class","datasetChoice")
+            .attr("name","datasetChoice")
+            .attr("value", d => d);
+
+        divGroup.select(".groupInputLabel")
+            .style("font-size","12px")
+            .attr("x",30)
+            .attr("y",(d,i) => (i*12))
+            .html(d => d);
+
+        populateWells(matrixWellIds);
+
+        function populateWells(myDataset){
+            myDataset = myDataset.sort((a,b) => d3.ascending(wellNames[a],wellNames[b]))
+            var wellGroup = d3.select("#well_div").selectAll('.wellDivInputs')
+                .data(myDataset)
+                .join(function(group){
+                    var enter = group.append("g").attr("class","wellDivInputs");
+                    enter.append("input").attr("class","wellInput");
+                    enter.append("span").attr("class","wellInputLabel");
+                    enter.append("br");
+                    return enter;
+                });
+
+            wellGroup.select(".wellInput")
+                .attr("id",d => "radio_" + d)
+                .attr("y",(d,i) => (i*12))
+                .attr("type","radio")
+                .style("height","10px")
+                .attr("class","datasetChoice")
+                .attr("name","datasetChoice")
+                .attr("value", d => d);
+
+            wellGroup.select(".wellInputLabel")
+                .style("font-size","10px")
+                .attr("x",30)
+                .attr("y",(d,i) => (i*12))
+                .html(d => wellNames[d].substr(0,30));
+        }
+
+
+        mallMap.mainData = all_datasets[0];
+        mallMap.extraData = extraChartData;
+        mallMap.mapData = all_datasets[4];
+        initialiseDashboard(mallMap.mainData, mallMap.extraData,mallMap.mapData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+
+        d3.selectAll(".datasetChoice")
+            .on("change",function(d){
+                if(this.id === "group"){
+                    populateWells(wellsByGroup[this.value]);
+                }
+                mallMap.selectedColor = this.value === "functional" ? "default" : this.value;
+                initialiseDashboard(mallMap.mainData, mallMap.extraData,mallMap.mapData,"chart_div","breadcrumb_div","footer_div","extra_chart_div");
+            });
+
+        function convertDate(myDate){
+            myDate = myDate.split("/");
+            return new Date(myDate[2],+myDate[0]-1,myDate[1]);
+        }
+    };
+
+
+    //functions used to stripData from Observable demos down to only what's needed and same format
+    //chart now loads with this stripped data.
+
+    function stripData1 (myDataset){
+
+        //old code - adding id
+        //add an id to each node (temp hopefully)
+        all_datasets.forEach(function(d,i){
+            if(i < 2){
+                var myID = 0;
+                d.id = "dataset_" + i + "_" + myID;
+                myID += 1;
+                d.children = addId(d.children,i);
+
+                function addId(myChildren,myIndex){
+                    myChildren.forEach(function(c){
+                        c.id = "dataset_" + myIndex + "_" + myID;
+                        myID += 1
+                        if(c.children !== undefined){
+                            addId(c.children,myIndex);
+                        }
+                    })
+                    return myChildren;
+                }
+            }
+        })
+
+        var newData = {};
+        var fieldNames = ["name","value"];
+
+        addDetails(myDataset, newData);
+
+        function addDetails(myDescendant, currentData) {
+            fieldNames.forEach(function (f) {
+                currentData[f] = myDescendant[f];
+            });
+            currentData["colors"] = {
+                "functional":myDescendant["functional_color"],
+                "dev":myDescendant["dev_color"],
+                "default":myDescendant["color"]
+            }
+            if (myDescendant.children !== undefined) {
+                currentData.children = [];
+            }
+            var children = myDescendant.children;
+            if (myDescendant.children === null) {
+                children = myDescendant._children;
+            }
+            if (children !== undefined) {
+                children.forEach(function (c, i) {
+                    currentData.children.push({});
+                    addDetails(c, currentData.children[i]);
+                });
+            }
+        }
+
+        return newData;
+    }
+
+    function stripData2 (myDataset){
+        var newData = {};
+        var fieldNames = ["name","value"];
+
+        addDetails(myDataset, newData);
+
+        function addDetails(myDescendant, currentData) {
+            fieldNames.forEach(function (f) {
+                currentData[f] = myDescendant[f];
+            });
+            currentData["colors"] = {
+                "default":myDescendant["colorname"]
+            }
+            if (myDescendant.children !== undefined) {
+                currentData.children = [];
+            }
+            var children = myDescendant.children;
+            if (myDescendant.children === null) {
+                children = myDescendant._children;
+            }
+            if (children !== undefined) {
+                children.forEach(function (c, i) {
+                    currentData.children.push({});
+                    addDetails(c, currentData.children[i]);
+                });
+            }
+        }
+
+        return newData;
+    }
+</script>
+</body>
+</html>
