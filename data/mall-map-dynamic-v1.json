@@ -1,0 +1,979 @@
+[
+  {
+    "id": "/",
+    "node_level": 0,
+    "name": "RADAR",
+    "value": 100000.0,
+    "children": [
+      {
+        "id": "/1/",
+        "node_level": 1,
+        "name": "Future Use",
+        "colors": { "functional": "DarkGray" },
+        "value": 6250.0,
+        "children": [
+          {
+            "id": "/1/1/",
+            "node_level": 2,
+            "name": "Reserves",
+            "value": 3125.0
+          },
+          {
+            "id": "/1/2/",
+            "node_level": 2,
+            "name": "Product",
+            "value": 3125.0,
+            "children": [
+              {
+                "id": "/1/2/1/",
+                "node_level": 3,
+                "name": "Oil",
+                "value": 2640.8450704225
+              },
+              {
+                "id": "/1/2/2/",
+                "node_level": 3,
+                "name": "Wet Gas",
+                "value": 440.1408450704,
+                "children": [
+                  {
+                    "id": "/1/2/2/1/",
+                    "node_level": 4,
+                    "name": "Dry Gas",
+                    "value": 220.0704225352
+                  },
+                  {
+                    "id": "/1/2/2/2/",
+                    "node_level": 4,
+                    "name": "NGL",
+                    "value": 220.0704225352
+                  }
+                ]
+              },
+              {
+                "id": "/1/2/3/",
+                "node_level": 3,
+                "name": "Water",
+                "value": 44.014084507
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "/2/",
+        "node_level": 1,
+        "name": "Land",
+        "colors": { "functional": "Gold" },
+        "value": 6250.0,
+        "children": [
+          {
+            "id": "/2/1/",
+            "node_level": 2,
+            "name": "Lease Jeopardy",
+            "value": 3125.0
+          },
+          {
+            "id": "/2/2/",
+            "node_level": 2,
+            "name": "SI Period",
+            "value": 3125.0
+          }
+        ]
+      },
+      {
+        "id": "/3/",
+        "node_level": 1,
+        "name": "Cash Flow",
+        "colors": { "functional": "MediumBlue" },
+        "value": 25000.0,
+        "children": [
+          {
+            "id": "/3/2/",
+            "node_level": 2,
+            "name": "Revenue",
+            "colors": { "functional": "CornflowerBlue" },
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/3/2/2/",
+                "node_level": 3,
+                "name": "7 Day ▲ (Actual-FC)",
+                "value": 8333.3333333333,
+                "children": [
+                  {
+                    "id": "/3/2/2/1/",
+                    "node_level": 4,
+                    "name": "Opportunity Downtime",
+                    "value": 2777.7777777778,
+                    "children": [
+                      {
+                        "id": "/3/2/2/1/1/",
+                        "node_level": 5,
+                        "name": "Planned",
+                        "value": 1388.8888888889,
+                        "children": [
+                          {
+                            "id": "/3/2/2/1/1/1/",
+                            "node_level": 6,
+                            "name": "Maintenance Surface",
+                            "value": 462.962962963
+                          },
+                          {
+                            "id": "/3/2/2/1/1/2/",
+                            "node_level": 6,
+                            "name": "Maintenance Downhole",
+                            "value": 462.962962963
+                          },
+                          {
+                            "id": "/3/2/2/1/1/3/",
+                            "node_level": 6,
+                            "name": "Maintenance External",
+                            "value": 462.962962963
+                          }
+                        ]
+                      },
+                      {
+                        "id": "/3/2/2/1/2/",
+                        "node_level": 5,
+                        "name": "Unplanned",
+                        "value": 1388.8888888889,
+                        "children": [
+                          {
+                            "id": "/3/2/2/1/2/1/",
+                            "node_level": 6,
+                            "name": "Downhole",
+                            "value": 694.4444444445
+                          },
+                          {
+                            "id": "/3/2/2/1/2/2/",
+                            "node_level": 6,
+                            "name": "Surface",
+                            "value": 694.4444444445
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "/3/2/2/1.1/",
+                    "node_level": 4,
+                    "name": "Impairment",
+                    "value": 2777.7777777778
+                  },
+                  {
+                    "id": "/3/2/2/2/",
+                    "node_level": 4,
+                    "name": "Best in Class Downtime",
+                    "value": 2777.7777777778
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "/3/3/",
+            "node_level": 2,
+            "name": "Expense",
+            "colors": { "functional": "SkyBlue" },
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/3/3/2/",
+                "node_level": 3,
+                "name": "7 Day ▲ (Actual-FC)",
+                "value": 8333.3333333333,
+                "children": [
+                  {
+                    "id": "/3/3/2/1/",
+                    "node_level": 4,
+                    "name": "Actual = Last Closed Month",
+                    "value": 2777.7777777778
+                  },
+                  {
+                    "id": "/3/3/2/2/",
+                    "node_level": 4,
+                    "name": "Actual = Last 3 Closed Months",
+                    "value": 2777.7777777778
+                  },
+                  {
+                    "id": "/3/3/2/3/",
+                    "node_level": 4,
+                    "name": "Actual = Last 6 Closed Months",
+                    "value": 2777.7777777778
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "/3/4/",
+            "node_level": 2,
+            "name": "Capital",
+            "colors": { "functional": "LightSteelBlue" },
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/3/4/1/",
+                "node_level": 3,
+                "name": "7 Day ▲ (Actual-FC)",
+                "value": 8333.3333333333,
+                "children": [
+                  {
+                    "id": "/3/4/1/1/",
+                    "node_level": 4,
+                    "name": "Actual = 6 Month Average",
+                    "value": 4166.6666666667
+                  },
+                  {
+                    "id": "/3/4/1/2/",
+                    "node_level": 4,
+                    "name": "Actual = 12 Month Average",
+                    "value": 4166.6666666667
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "/4/",
+        "node_level": 1,
+        "name": "Data",
+        "colors": { "functional": "Chocolate" },
+        "value": 25000.0,
+        "children": [
+          {
+            "id": "/4/1/",
+            "node_level": 2,
+            "name": "Missing Values",
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/4/1/1/",
+                "node_level": 3,
+                "name": "Well Details",
+                "value": 8333.3333333333,
+                "children": [
+                  {
+                    "id": "/4/1/1/1/",
+                    "node_level": 4,
+                    "name": "Surface Location",
+                    "value": 1388.8888888889
+                  },
+                  {
+                    "id": "/4/1/1/2/",
+                    "node_level": 4,
+                    "name": "Bottom Hole Location",
+                    "value": 1388.8888888889
+                  },
+                  {
+                    "id": "/4/1/1/3/",
+                    "node_level": 4,
+                    "name": "Tubing ID",
+                    "value": 1388.8888888889
+                  },
+                  {
+                    "id": "/4/1/1/4/",
+                    "node_level": 4,
+                    "name": "Shrink",
+                    "value": 1388.8888888889
+                  },
+                  {
+                    "id": "/4/1/1/5/",
+                    "node_level": 4,
+                    "name": "NGL Yield",
+                    "value": 1388.8888888889
+                  },
+                  {
+                    "id": "/4/1/1/6/",
+                    "node_level": 4,
+                    "name": "Ownership Decimals",
+                    "value": 1388.8888888889
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "/4/2/",
+            "node_level": 2,
+            "name": "Logical Violations",
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/4/2/1/",
+                "node_level": 3,
+                "name": "0 Prod w No DT",
+                "value": 2777.7777777778
+              },
+              {
+                "id": "/4/2/2/",
+                "node_level": 3,
+                "name": "24 Hrs DT w Prod &gt; 0",
+                "value": 2777.7777777778
+              },
+              {
+                "id": "/4/2/3/",
+                "node_level": 3,
+                "name": "&gt; 24 Hrs DT for day",
+                "value": 2777.7777777778
+              }
+            ]
+          },
+          {
+            "id": "/4/3/",
+            "node_level": 2,
+            "name": "Threshold Violations",
+            "value": 8333.3333333333,
+            "children": [
+              {
+                "id": "/4/3/1/",
+                "node_level": 3,
+                "name": "Lat/Long Range",
+                "value": 2083.3333333333
+              },
+              {
+                "id": "/4/3/2/",
+                "node_level": 3,
+                "name": "KPI Thresholds",
+                "value": 2083.3333333333,
+                "children": [
+                  {
+                    "id": "/4/3/2/1/",
+                    "node_level": 4,
+                    "name": "KPI 1",
+                    "value": 694.4444444444
+                  },
+                  {
+                    "id": "/4/3/2/2/",
+                    "node_level": 4,
+                    "name": "KPI 2",
+                    "value": 694.4444444444
+                  },
+                  {
+                    "id": "/4/3/2/3/",
+                    "node_level": 4,
+                    "name": "KPI 3",
+                    "value": 694.4444444444
+                  }
+                ]
+              },
+              {
+                "id": "/4/3/3/",
+                "node_level": 3,
+                "name": "Prod Spike",
+                "value": 2083.3333333333
+              },
+              {
+                "id": "/4/3/4/",
+                "node_level": 3,
+                "name": "Negative Prod",
+                "value": 2083.3333333333
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "/5/",
+        "node_level": 1,
+        "name": "Operations",
+        "colors": { "functional": "DarkOrchid" },
+        "value": 37500.0,
+        "children": [
+          {
+            "id": "/5/1/",
+            "node_level": 2,
+            "name": "Lift",
+            "colors": { "functional": "Orchid" },
+            "value": 12500.0,
+            "children": [
+              {
+                "id": "/5/1/1/",
+                "node_level": 3,
+                "name": "Rod Lift",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/1/1/",
+                    "node_level": 4,
+                    "name": "PRV",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/2/",
+                    "node_level": 4,
+                    "name": "MRPL/PPRL",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/3/",
+                    "node_level": 4,
+                    "name": "Rod Load",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/4/",
+                    "node_level": 4,
+                    "name": "Qrod vs. Liq",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/5/",
+                    "node_level": 4,
+                    "name": "Pump Fillage",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/6/",
+                    "node_level": 4,
+                    "name": "Run Time %",
+                    "value": 223.2142857143
+                  },
+                  {
+                    "id": "/5/1/1/7/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 223.2142857143,
+                    "children": [
+                      {
+                        "id": "/5/1/1/7/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 55.8035714286
+                      },
+                      {
+                        "id": "/5/1/1/7/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 55.8035714286
+                      },
+                      {
+                        "id": "/5/1/1/7/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 55.8035714286
+                      },
+                      {
+                        "id": "/5/1/1/7/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 55.8035714286
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/2/",
+                "node_level": 3,
+                "name": "Plunger",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/2/1/",
+                    "node_level": 4,
+                    "name": "Run Times",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/1/2/2/",
+                    "node_level": 4,
+                    "name": "Run Cycles",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/1/2/4/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 520.8333333333,
+                    "children": [
+                      {
+                        "id": "/5/1/2/4/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/2/4/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/2/4/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/2/4/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 130.2083333333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/3/",
+                "node_level": 3,
+                "name": "GAPL",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/3/1/",
+                    "node_level": 4,
+                    "name": "Run Times",
+                    "value": 260.4166666667
+                  },
+                  {
+                    "id": "/5/1/3/2/",
+                    "node_level": 4,
+                    "name": "Run Cycles",
+                    "value": 260.4166666667
+                  },
+                  {
+                    "id": "/5/1/3/4/",
+                    "node_level": 4,
+                    "name": "WPF",
+                    "value": 260.4166666667
+                  },
+                  {
+                    "id": "/5/1/3/5/",
+                    "node_level": 4,
+                    "name": "Over Injection",
+                    "value": 260.4166666667
+                  },
+                  {
+                    "id": "/5/1/3/6/",
+                    "node_level": 4,
+                    "name": "Under Injection",
+                    "value": 260.4166666667
+                  },
+                  {
+                    "id": "/5/1/3/7/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 260.4166666667,
+                    "children": [
+                      {
+                        "id": "/5/1/3/7/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 65.1041666667
+                      },
+                      {
+                        "id": "/5/1/3/7/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 65.1041666667
+                      },
+                      {
+                        "id": "/5/1/3/7/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 65.1041666667
+                      },
+                      {
+                        "id": "/5/1/3/7/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 65.1041666667
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/4/",
+                "node_level": 3,
+                "name": "ESP",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/4/1/",
+                    "node_level": 4,
+                    "name": "Hz",
+                    "value": 390.625
+                  },
+                  {
+                    "id": "/5/1/4/2/",
+                    "node_level": 4,
+                    "name": "PIP",
+                    "value": 390.625
+                  },
+                  {
+                    "id": "/5/1/4/3/",
+                    "node_level": 4,
+                    "name": "Motor Temp",
+                    "value": 390.625
+                  },
+                  {
+                    "id": "/5/1/4/4/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 390.625,
+                    "children": [
+                      {
+                        "id": "/5/1/4/4/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 97.65625
+                      },
+                      {
+                        "id": "/5/1/4/4/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 97.65625
+                      },
+                      {
+                        "id": "/5/1/4/4/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 97.65625
+                      },
+                      {
+                        "id": "/5/1/4/4/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 97.65625
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/5/",
+                "node_level": 3,
+                "name": "Gas Lift",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/5/1/",
+                    "node_level": 4,
+                    "name": "WPF",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/1/5/2/",
+                    "node_level": 4,
+                    "name": "Critical Rate",
+                    "value": 520.8333333333,
+                    "children": [
+                      {
+                        "id": "/5/1/5/2/1/",
+                        "node_level": 5,
+                        "name": "Over Injection",
+                        "value": 260.4166666667
+                      },
+                      {
+                        "id": "/5/1/5/2/2/",
+                        "node_level": 5,
+                        "name": "Under Injection",
+                        "value": 260.4166666667
+                      }
+                    ]
+                  },
+                  {
+                    "id": "/5/1/5/4/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 520.8333333333,
+                    "children": [
+                      {
+                        "id": "/5/1/5/4/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/5/4/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/5/4/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 130.2083333333
+                      },
+                      {
+                        "id": "/5/1/5/4/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 130.2083333333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/6/",
+                "node_level": 3,
+                "name": "Flowing",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/6/1/",
+                    "node_level": 4,
+                    "name": "Critical Rate",
+                    "value": 781.25
+                  },
+                  {
+                    "id": "/5/1/6/2/",
+                    "node_level": 4,
+                    "name": "Thresholds",
+                    "value": 781.25,
+                    "children": [
+                      {
+                        "id": "/5/1/6/2/1/",
+                        "node_level": 5,
+                        "name": "Line Pressure",
+                        "value": 195.3125
+                      },
+                      {
+                        "id": "/5/1/6/2/2/",
+                        "node_level": 5,
+                        "name": "Tubing Pressure",
+                        "value": 195.3125
+                      },
+                      {
+                        "id": "/5/1/6/2/3/",
+                        "node_level": 5,
+                        "name": "Casing Pressure",
+                        "value": 195.3125
+                      },
+                      {
+                        "id": "/5/1/6/2/4/",
+                        "node_level": 5,
+                        "name": "Prod Instability",
+                        "value": 195.3125
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/7/",
+                "node_level": 3,
+                "name": "AL Transition",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/7/1/",
+                    "node_level": 4,
+                    "name": "GLR vs. Liq",
+                    "value": 1562.5
+                  }
+                ]
+              },
+              {
+                "id": "/5/1/8/",
+                "node_level": 3,
+                "name": "AL Region",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/1/8/1/",
+                    "node_level": 4,
+                    "name": "GLR vs. Liq",
+                    "value": 1562.5
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "/5/2/",
+            "node_level": 2,
+            "name": "Production",
+            "colors": { "functional": "Plum" },
+            "value": 12500.0,
+            "children": [
+              {
+                "id": "/5/2/1/",
+                "node_level": 3,
+                "name": "▲ to IPC",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/2/1/1/",
+                    "node_level": 4,
+                    "name": "Oil",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/1/2/",
+                    "node_level": 4,
+                    "name": "Gas",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/1/3/",
+                    "node_level": 4,
+                    "name": "Water",
+                    "value": 520.8333333333
+                  }
+                ]
+              },
+              {
+                "id": "/5/2/2/",
+                "node_level": 3,
+                "name": "Pressures",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/2/2/1/",
+                    "node_level": 4,
+                    "name": "Casing Pressure Change",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/2/2/",
+                    "node_level": 4,
+                    "name": "Tubing Pressure Change",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/2/3/",
+                    "node_level": 4,
+                    "name": "Line Pressure Change",
+                    "value": 520.8333333333
+                  }
+                ]
+              },
+              {
+                "id": "/5/2/3/",
+                "node_level": 3,
+                "name": "Discontinuity",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/2/3/1/",
+                    "node_level": 4,
+                    "name": "Oil",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/3/2/",
+                    "node_level": 4,
+                    "name": "Gas",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/3/3/",
+                    "node_level": 4,
+                    "name": "Water",
+                    "value": 520.8333333333
+                  }
+                ]
+              },
+              {
+                "id": "/5/2/4/",
+                "node_level": 3,
+                "name": "Parallel Shift",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/2/4/1/",
+                    "node_level": 4,
+                    "name": "Oil",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/4/2/",
+                    "node_level": 4,
+                    "name": "Gas",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/4/3/",
+                    "node_level": 4,
+                    "name": "Water",
+                    "value": 520.8333333333
+                  }
+                ]
+              },
+              {
+                "id": "/5/2/5/",
+                "node_level": 3,
+                "name": "Stability Change",
+                "value": 1562.5,
+                "children": [
+                  {
+                    "id": "/5/2/5/1/",
+                    "node_level": 4,
+                    "name": "Oil",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/5/2/",
+                    "node_level": 4,
+                    "name": "Gas",
+                    "value": 520.8333333333
+                  },
+                  {
+                    "id": "/5/2/5/3/",
+                    "node_level": 4,
+                    "name": "Water",
+                    "value": 520.8333333333
+                  }
+                ]
+              },
+              {
+                "id": "/5/2/6/",
+                "node_level": 3,
+                "name": "Downtime Threshold",
+                "value": 1562.5
+              },
+              {
+                "id": "/5/2/7/",
+                "node_level": 3,
+                "name": "Downtime Trend",
+                "value": 1562.5
+              },
+              {
+                "id": "/5/2/8/",
+                "node_level": 3,
+                "name": "Stream Ratio Irregularity",
+                "value": 1562.5
+              }
+            ]
+          },
+          {
+            "id": "/5/3/",
+            "node_level": 2,
+            "name": "Workover",
+            "colors": { "functional": "Thistle" },
+            "value": 12500.0,
+            "children": [
+              {
+                "id": "/5/3/1/",
+                "node_level": 3,
+                "name": "Planned",
+                "value": 4166.6666666667
+              },
+              {
+                "id": "/5/3/2/",
+                "node_level": 3,
+                "name": "Other",
+                "value": 4166.6666666667
+              },
+              {
+                "id": "/5/3/3/",
+                "node_level": 3,
+                "name": "Recent",
+                "value": 4166.6666666667
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
