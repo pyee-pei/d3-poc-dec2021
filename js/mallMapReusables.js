@@ -385,7 +385,7 @@ function zoomToBounds(expandable,transitionTime) {
                         myRoot = d.data;
                         myDepth = d3.min(myRoot,m => m.depth);
                         if(d.depth === 0){allData = true};
-                        selectedColor = "default";
+                        selectedColor = "functional";
                     }
                     var allData = false;
                     if(myDepth > 0) {
@@ -479,8 +479,7 @@ function zoomToBounds(expandable,transitionTime) {
     }
 
     function getPathFill(d){
-        while (!d.data.colors[selectedColor] && d.parent) d = d.parent;
-        return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.fillColor);
+        return d.depth === 0 ? "transparent" : (d.data.colors[selectedColor] || mallMap.colors.fillColor);
     }
 
     my.drawRelativeGraph = function(graphData) {

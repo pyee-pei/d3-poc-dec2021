@@ -10,9 +10,9 @@ function initialiseDashboard(myData,extraChartData,mapData,divId,breadcrumbDivId
     //draw map + minimap in footer
     drawMallMap(myData,divId,breadcrumbDivId);
     drawMiniMallMap(myData,footerDivId);
-    mallMap.extraChartData = extraChartData;
-    mallMap.extraChartDivId = extraChartDivId;
-    drawStackedBar();
+  //  mallMap.extraChartData = extraChartData;
+   // mallMap.extraChartDivId = extraChartDivId;
+   // drawStackedBar();
 
 }
 
