@@ -1,6 +1,4 @@
-
-
-function initialiseDashboard(myData,extraChartData,mapData,divId,breadcrumbDivId,footerDivId,extraChartDivId){
+function initialiseDashboard(myData,extraChartData,divId,breadcrumbDivId,footerDivId,extraChartDivId){
 
     //draw svg for breadcrumb,chart and footer
     drawSvg(divId,true);
@@ -10,9 +8,9 @@ function initialiseDashboard(myData,extraChartData,mapData,divId,breadcrumbDivId
     //draw map + minimap in footer
     drawMallMap(myData,divId,breadcrumbDivId);
     drawMiniMallMap(myData,footerDivId);
-  //  mallMap.extraChartData = extraChartData;
-   // mallMap.extraChartDivId = extraChartDivId;
-   // drawStackedBar();
+    mallMap.extraChartData = extraChartData;
+    mallMap.extraChartDivId = extraChartDivId;
+    drawStackedBar();
 
 }
 
@@ -60,39 +58,6 @@ function drawTooltipMallMap(myData,divId,selectedColor){
         .myData(myData)
         .myClass(divId)
         .selectedColor(selectedColor);
-
-    my_chart(svg);
-}
-
-function drawWellMap(){
-
-    d3.select("." + mallMap.extraChartDivId  + "Svg").selectAll("*").remove();
-    var svg = d3.select("." + mallMap.extraChartDivId + "Svg");
-    svg.append("g").attr("class","zoomSvg" + mallMap.extraChartDivId);
-    var height = +svg.attr("height");
-    var width = +svg.attr("width");
-
-    var groupedByWell = Array.from(d3.rollup(mallMap.extraChartData.data, v => d3.sum(v, s => Math.abs(s.actual_revenue - s.ipc_revenue)), d => d.well_id));
-    var myData = [];
-    groupedByWell.forEach(function(d){
-        var oneWell = mallMap.extraChartData.data.find(f => f.well_id === d[0]);
-        myData.push({
-            "well_id": d[0],
-            "difference":d[1],
-            "wellName": mallMap.extraChartData.wellNames[d[0]],
-            "long_lat":oneWell.long_lat,
-            "position_flag":oneWell.position_flag,
-            "ipc": d3.sum(mallMap.extraChartData.data, s => s.well_id === d[0] ? s.ipc_revenue : 0),
-            "actual": d3.sum(mallMap.extraChartData.data, s => s.well_id === d[0] ? s.actual_revenue : 0),
-        })
-    })
-
-    var my_chart = wellMap()
-        .width(width)
-        .height(height)
-        .myData(myData)
-        .myClass(mallMap.extraChartDivId)
-        .mapData(mallMap.mapData);
 
     my_chart(svg);
 }
@@ -183,5 +148,4 @@ function drawSvg(divId,zoomSvg){
     }
     return svg;
 }
-
 
