@@ -1,4 +1,4 @@
-function initialiseDashboard(myData,extraChartData,divId,breadcrumbDivId,footerDivId,extraChartDivId){
+function initialiseDashboard(myData,extraChartData,mapData,divId,breadcrumbDivId,footerDivId,extraChartDivId){
 
     //draw svg for breadcrumb,chart and footer
     drawSvg(divId,true);
